@@ -1,0 +1,49 @@
+@startuml
+'https://plantuml.com/class-diagram
+'英雄机单例模式结构图
+
+' 客户端调用方 (根据批注"client可画可不画"，这里画出Game体现调用关系更完整)
+class Game {
+}
+
+' 明确标注设计模式名称
+class HeroAircraft <<Singleton>> {
+    ' 关键点1：私有静态变量 (使用 {static} 生成下划线)
+    - {static} instance: HeroAircraft
+
+    ' 原有的普通成员变量
+    - shootNum: int
+    - power: int
+    - direction: int
+
+    ' 关键点2：私有构造函数 (将 + 改为 -)
+    - HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+
+    ' 关键点3：提供一个访问该类唯一实例的公有静态方法 (使用 {static} 生成下划线)
+    + {static} getInstance(int locationX, int locationY, int speedX, int speedY, int hp): HeroAircraft
+
+    ' 原有的普通方法
+    + forward(): void
+    + shoot(): List<BaseBullet>
+}
+
+' 连线关系
+' 1. 客户端调用获取实例
+Game -> HeroAircraft
+
+' 2. 单例模式的核心：自己拥有一个自己的实例对象（对应图中指回自己的箭头）
+HeroAircraft --> HeroAircraft : instance
+
+' 添加代码注释卡片（对应指导图中的灰色代码框，可选，为了完美还原）
+note right of HeroAircraft
+  if (instance == null) {
+      synchronized (HeroAircraft.class) {
+          if (instance == null) {
+              instance = new HeroAircraft(..);
+          }
+      }
+  }
+  return instance;
+end note
+
+@enduml
