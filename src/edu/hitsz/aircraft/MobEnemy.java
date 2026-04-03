@@ -2,6 +2,7 @@ package edu.hitsz.aircraft;
 
 import edu.hitsz.application.Main;
 import edu.hitsz.bullet.BaseBullet;
+import edu.hitsz.prop.AbstractProp;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -31,4 +32,14 @@ public class MobEnemy extends AbstractEnemy {
         return new LinkedList<>();
     }
 
+    @Override
+    public int getScore() {
+        return 10; // 普通敌机 10 分
+    }
+
+    @Override
+    public List<AbstractProp> dropProps() {
+        // 普通敌机不掉落道具，返回空列表
+        return new LinkedList<>();
+    }
 }

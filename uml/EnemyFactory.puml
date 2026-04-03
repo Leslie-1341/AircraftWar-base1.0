@@ -1,0 +1,93 @@
+@startuml
+'https://plantuml.com/class-diagram
+title 敌机工厂方法模式结构图 (Factory Method Pattern)
+
+' ==========================================
+' 客户端 (Client)
+' ==========================================
+class Game {
+    - enemyAircrafts: List<AbstractEnemy>
+    + action(): void
+}
+
+' ==========================================
+' 产品族 (Product)
+' ==========================================
+abstract class AbstractEnemy {
+    + AbstractEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward(): void
+    + {abstract} shoot(): List<BaseBullet>
+    ' 【核心新增】：多态方法，获取击毁分数
+    + {abstract} getScore(): int
+    ' 【核心新增】：多态方法，获取掉落的道具列表
+    + {abstract} dropProps(): List<AbstractProp>
+}
+
+class MobEnemy {
+    + MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + getScore(): int
+    + dropProps(): List<AbstractProp>
+}
+class EliteEnemy {
+    + EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + getScore(): int
+    + dropProps(): List<AbstractProp>
+}
+class ElitePlusEnemy {
+    + ElitePlusEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + getScore(): int
+    + dropProps(): List<AbstractProp>
+}
+class BossEnemy {
+    + BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + getScore(): int
+    + dropProps(): List<AbstractProp>
+}
+
+' 产品继承关系
+AbstractEnemy <|-- MobEnemy
+AbstractEnemy <|-- EliteEnemy
+AbstractEnemy <|-- ElitePlusEnemy
+AbstractEnemy <|-- BossEnemy
+
+' ==========================================
+' 工厂族 (Factory)
+' ==========================================
+' 严格对齐指导书：工厂接口
+interface EnemyFactory <<Factory Method>> {
+    + {abstract} createEnemy(): AbstractEnemy
+}
+
+class MobFactory {
+    + createEnemy(): AbstractEnemy
+}
+class EliteFactory {
+    + createEnemy(): AbstractEnemy
+}
+class ElitePlusFactory {
+    + createEnemy(): AbstractEnemy
+}
+class BossFactory {
+    + createEnemy(): AbstractEnemy
+}
+
+' 工厂实现关系 (虚线空心三角)
+EnemyFactory <|.. MobFactory
+EnemyFactory <|.. EliteFactory
+EnemyFactory <|.. ElitePlusFactory
+EnemyFactory <|.. BossFactory
+
+' 工厂生产具体产品依赖关系
+MobFactory ..> MobEnemy : creates
+EliteFactory ..> EliteEnemy : creates
+ElitePlusFactory ..> ElitePlusEnemy : creates
+BossFactory ..> BossEnemy : creates
+
+' ==========================================
+' 客户端依赖关系 (体现针对接口编程)
+' ==========================================
+' Game 只依赖于接口 EnemyFactory 和抽象类 AbstractEnemy
+Game ..> EnemyFactory
+Game ..> AbstractEnemy
+
+@enduml

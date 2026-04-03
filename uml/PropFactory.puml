@@ -1,0 +1,117 @@
+@startuml
+'https://plantuml.com/class-diagram
+title 道具简单工厂模式结构图 (Simple Factory Pattern)
+
+' --- 抽象产品角色 ---
+abstract class AbstractProp {
+    + AbstractProp(int locationX, int locationY, int speedX, int speedY)
+    + forward(): void
+    ' 【核心新增】：通过多态实现道具生效逻辑的统一接口
+    + {abstract} active(heroAircraft: HeroAircraft): void
+}
+
+' --- 具体产品角色 ---
+class BloodSupply {
+    + BloodSupply(int locationX, int locationY, int speedX, int speedY)
+    + active(heroAircraft: HeroAircraft): void
+}
+
+class BulletSupply {
+    + BulletSupply(int locationX, int locationY, int speedX, int speedY)
+    + active(heroAircraft: HeroAircraft): void
+}
+
+class BulletPlusSupply {
+    + BulletPlusSupply(int locationX, int locationY, int speedX, int speedY)
+    + active(heroAircraft: HeroAircraft): void
+}
+
+class BombSupply {
+    + BombSupply(int locationX, int locationY, int speedX, int speedY)
+    + active(heroAircraft: HeroAircraft): void
+}
+
+class FreezeSupply {
+    + FreezeSupply(int locationX, int locationY, int speedX, int speedY)
+    + active(heroAircraft: HeroAircraft): void
+}
+
+' --- 建立继承关系 ---
+AbstractProp <|-- BloodSupply
+AbstractProp <|-- BulletSupply
+AbstractProp <|-- BulletPlusSupply
+AbstractProp <|-- BombSupply
+AbstractProp <|-- FreezeSupply
+
+' --- 工厂角色 ---
+class PropFactory <<Simple Factory>> {
+    ' 【参数修正】：将 propType 的类型从 int 修正为 String
+    + {static} createProp(propType: String, x: int, y: int, speedX: int, speedY: int): AbstractProp
+}
+
+' --- 建立依赖关系 (工厂创建具体产品) ---
+PropFactory ..> BloodSupply
+PropFactory ..> BulletSupply
+PropFactory ..> BulletPlusSupply
+PropFactory ..> BombSupply
+PropFactory ..> FreezeSupply
+
+@enduml@startuml
+       'https://plantuml.com/class-diagram
+       title 道具简单工厂模式结构图 (Simple Factory Pattern)
+
+       ' --- 抽象产品角色 ---
+       abstract class AbstractProp {
+           + AbstractProp(int locationX, int locationY, int speedX, int speedY)
+           + forward(): void
+           ' 【核心新增】：通过多态实现道具生效逻辑的统一接口
+           + {abstract} active(heroAircraft: HeroAircraft): void
+       }
+
+       ' --- 具体产品角色 ---
+       class BloodSupply {
+           + BloodSupply(int locationX, int locationY, int speedX, int speedY)
+           + active(heroAircraft: HeroAircraft): void
+       }
+
+       class BulletSupply {
+           + BulletSupply(int locationX, int locationY, int speedX, int speedY)
+           + active(heroAircraft: HeroAircraft): void
+       }
+
+       class BulletPlusSupply {
+           + BulletPlusSupply(int locationX, int locationY, int speedX, int speedY)
+           + active(heroAircraft: HeroAircraft): void
+       }
+
+       class BombSupply {
+           + BombSupply(int locationX, int locationY, int speedX, int speedY)
+           + active(heroAircraft: HeroAircraft): void
+       }
+
+       class FreezeSupply {
+           + FreezeSupply(int locationX, int locationY, int speedX, int speedY)
+           + active(heroAircraft: HeroAircraft): void
+       }
+
+       ' --- 建立继承关系 ---
+       AbstractProp <|-- BloodSupply
+       AbstractProp <|-- BulletSupply
+       AbstractProp <|-- BulletPlusSupply
+       AbstractProp <|-- BombSupply
+       AbstractProp <|-- FreezeSupply
+
+       ' --- 工厂角色 ---
+       class PropFactory <<Simple Factory>> {
+           ' 【参数修正】：将 propType 的类型从 int 修正为 String
+           + {static} createProp(propType: String, x: int, y: int, speedX: int, speedY: int): AbstractProp
+       }
+
+       ' --- 建立依赖关系 (工厂创建具体产品) ---
+       PropFactory ..> BloodSupply
+       PropFactory ..> BulletSupply
+       PropFactory ..> BulletPlusSupply
+       PropFactory ..> BombSupply
+       PropFactory ..> FreezeSupply
+
+       @enduml

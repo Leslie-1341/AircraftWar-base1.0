@@ -1,5 +1,8 @@
 package edu.hitsz.aircraft;
 
+// 【新增导包】因为要用到窗口宽度和图片高度，需要引入这两个类
+import edu.hitsz.application.ImageManager;
+import edu.hitsz.application.Main;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.bullet.HeroBullet;
 
@@ -29,19 +32,28 @@ public class HeroAircraft extends AbstractAircraft {
     }
 
     // 【修改 3】提供全局唯一的访问点（双重检查锁定 DCL）
-    public static HeroAircraft getInstance(int locationX, int locationY, int speedX, int speedY, int hp) {
+    // 【第二次实验课修改】取消外部传参，将坐标、速度和血量的初始化逻辑移入内部，实现创建与使用彻底分离
+    public static HeroAircraft getInstance() {
         // 第一重检查：如果不为空，直接返回，提高效率
         if (instance == null) {
             // 加上同步锁，确保多线程环境下的线程安全
             synchronized (HeroAircraft.class) {
                 // 第二重检查：拿到锁后再判断一次，防止多个线程同时通过了第一重检查
                 if (instance == null) {
-                    instance = new HeroAircraft(locationX, locationY, speedX, speedY, hp);
+                    // 在内部完成实例化参数的计算和赋值
+                    instance = new HeroAircraft(
+                            Main.WINDOW_WIDTH / 2,
+                            Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight(),
+                            0,
+                            0,
+                            100
+                    );
                 }
             }
         }
         return instance;
     }
+
     @Override
     public void forward() {
         // 英雄机由鼠标控制，不通过forward函数移动

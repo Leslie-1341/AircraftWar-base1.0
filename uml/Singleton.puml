@@ -2,7 +2,7 @@
 'https://plantuml.com/class-diagram
 '英雄机单例模式结构图
 
-' 客户端调用方 (根据批注"client可画可不画"，这里画出Game体现调用关系更完整)
+' 客户端调用方 (画出Game体现调用关系更完整)
 class Game {
 }
 
@@ -34,7 +34,7 @@ Game -> HeroAircraft
 ' 2. 单例模式的核心：自己拥有一个自己的实例对象（对应图中指回自己的箭头）
 HeroAircraft --> HeroAircraft : instance
 
-' 添加代码注释卡片（对应指导图中的灰色代码框，可选，为了完美还原）
+' 添加代码注释卡片（对应指导图中的灰色代码框，可选）
 note right of HeroAircraft
   if (instance == null) {
       synchronized (HeroAircraft.class) {

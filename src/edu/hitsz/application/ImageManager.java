@@ -1,18 +1,21 @@
 package edu.hitsz.application;
 
-
+import edu.hitsz.aircraft.BossEnemy;
 import edu.hitsz.aircraft.EliteEnemy;
+import edu.hitsz.aircraft.ElitePlusEnemy;
+import edu.hitsz.aircraft.EliteProEnemy;
 import edu.hitsz.aircraft.HeroAircraft;
 import edu.hitsz.aircraft.MobEnemy;
 import edu.hitsz.bullet.EnemyBullet;
 import edu.hitsz.bullet.HeroBullet;
 import edu.hitsz.prop.BloodSupply;
+import edu.hitsz.prop.BombSupply;
 import edu.hitsz.prop.BulletPlusSupply;
 import edu.hitsz.prop.BulletSupply;
+import edu.hitsz.prop.FreezeSupply;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,37 +39,63 @@ public class ImageManager {
     public static BufferedImage ENEMY_BULLET_IMAGE;
     public static BufferedImage MOB_ENEMY_IMAGE;
     public static BufferedImage ELITE_ENEMY_IMAGE;
+    public static BufferedImage ELITE_PLUS_ENEMY_IMAGE;
+    public static BufferedImage ELITE_PRO_ENEMY_IMAGE;
+    public static BufferedImage BOSS_ENEMY_IMAGE; // 新增 Boss 敌机图片声明
     public static BufferedImage PROP_BLOOD_IMAGE;
     public static BufferedImage PROP_BULLET_IMAGE;
     public static BufferedImage PROP_BULLET_PLUS_IMAGE;
+    public static BufferedImage PROP_BOMB_IMAGE;
+    public static BufferedImage PROP_FREEZE_IMAGE;
+
     static {
         try {
-
-            BACKGROUND_IMAGE = ImageIO.read(new FileInputStream("src/images/bg.jpg"));
-
-            HERO_IMAGE = ImageIO.read(new FileInputStream("src/images/hero.png"));
-            MOB_ENEMY_IMAGE = ImageIO.read(new FileInputStream("src/images/mob.png"));
-            ELITE_ENEMY_IMAGE = ImageIO.read(new FileInputStream("src/images/elite.png"));
-            HERO_BULLET_IMAGE = ImageIO.read(new FileInputStream("src/images/bullet_hero.png"));
-            ENEMY_BULLET_IMAGE = ImageIO.read(new FileInputStream("src/images/bullet_enemy.png"));
-            PROP_BLOOD_IMAGE = ImageIO.read(new FileInputStream("src/images/prop_blood.png"));
-            PROP_BULLET_IMAGE = ImageIO.read(new FileInputStream("src/images/prop_bullet.png"));
-            PROP_BULLET_PLUS_IMAGE = ImageIO.read(new FileInputStream("src/images/prop_bulletPlus.png"));
+            BACKGROUND_IMAGE = loadImage("/images/bg.jpg");
+            HERO_IMAGE = loadImage("/images/hero.png");
+            MOB_ENEMY_IMAGE = loadImage("/images/mob.png");
+            ELITE_ENEMY_IMAGE = loadImage("/images/elite.png");
+            ELITE_PLUS_ENEMY_IMAGE = loadImage("/images/elitePlus.png");
+            ELITE_PRO_ENEMY_IMAGE = loadImage("/images/elitePro.png");
+            BOSS_ENEMY_IMAGE = loadImage("/images/boss.png"); // 加载 Boss 敌机图片
+            HERO_BULLET_IMAGE = loadImage("/images/bullet_hero.png");
+            ENEMY_BULLET_IMAGE = loadImage("/images/bullet_enemy.png");
+            PROP_BLOOD_IMAGE = loadImage("/images/prop_blood.png");
+            PROP_BULLET_IMAGE = loadImage("/images/prop_bullet.png");
+            PROP_BULLET_PLUS_IMAGE = loadImage("/images/prop_bulletPlus.png");
+            PROP_BOMB_IMAGE = loadImage("/images/prop_bomb.png");
+            PROP_FREEZE_IMAGE = loadImage("/images/prop_freeze.png");
 
             CLASSNAME_IMAGE_MAP.put(HeroAircraft.class.getName(), HERO_IMAGE);
             CLASSNAME_IMAGE_MAP.put(MobEnemy.class.getName(), MOB_ENEMY_IMAGE);
             CLASSNAME_IMAGE_MAP.put(EliteEnemy.class.getName(), ELITE_ENEMY_IMAGE);
+            CLASSNAME_IMAGE_MAP.put(ElitePlusEnemy.class.getName(), ELITE_PLUS_ENEMY_IMAGE);
+            CLASSNAME_IMAGE_MAP.put(EliteProEnemy.class.getName(), ELITE_PRO_ENEMY_IMAGE);
+            CLASSNAME_IMAGE_MAP.put(BossEnemy.class.getName(), BOSS_ENEMY_IMAGE); // 映射 Boss 敌机图片
             CLASSNAME_IMAGE_MAP.put(HeroBullet.class.getName(), HERO_BULLET_IMAGE);
             CLASSNAME_IMAGE_MAP.put(EnemyBullet.class.getName(), ENEMY_BULLET_IMAGE);
-            // 注意：这里的类名要和你刚才新建的道具类名严格一致
+
             CLASSNAME_IMAGE_MAP.put(BloodSupply.class.getName(), PROP_BLOOD_IMAGE);
             CLASSNAME_IMAGE_MAP.put(BulletSupply.class.getName(), PROP_BULLET_IMAGE);
             CLASSNAME_IMAGE_MAP.put(BulletPlusSupply.class.getName(), PROP_BULLET_PLUS_IMAGE);
+            CLASSNAME_IMAGE_MAP.put(BombSupply.class.getName(), PROP_BOMB_IMAGE);
+            CLASSNAME_IMAGE_MAP.put(FreezeSupply.class.getName(), PROP_FREEZE_IMAGE);
 
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
         }
+    }
+
+    private static BufferedImage loadImage(String path) throws IOException {
+        var url = ImageManager.class.getResource(path);
+        if (url == null) {
+            throw new IOException("Resource not found: " + path);
+        }
+        BufferedImage img = ImageIO.read(url);
+        if (img == null) {
+            throw new IOException("Failed to load image: " + path);
+        }
+        return img;
     }
 
     public static BufferedImage get(String className){
@@ -79,5 +108,4 @@ public class ImageManager {
         }
         return get(obj.getClass().getName());
     }
-
 }
