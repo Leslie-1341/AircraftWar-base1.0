@@ -1,8 +1,10 @@
 package edu.hitsz.aircraft;
 
-import edu.hitsz.bullet.BaseBullet;
-import edu.hitsz.bullet.EnemyBullet;
+import edu.hitsz.application.Main;
+import edu.hitsz.factory.PropFactory;
 import edu.hitsz.prop.AbstractProp;
+// 引入环射策略
+import edu.hitsz.strategy.RingShootStrategy;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -11,28 +13,68 @@ public class BossEnemy extends AbstractEnemy {
 
     public BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
+
+        // ==========================================
+        // 【策略模式配置】
+        // ==========================================
+        this.shootNum = 20;  // 单次同时发射 20 颗子弹
+        this.power = 10;     // 子弹伤害
+        this.direction = 1;  // 向下射击
+
+        // 装备环射弹道策略！
+        this.shootStrategy = new RingShootStrategy();
     }
 
     @Override
     public void forward() {
         super.forward();
-        // Boss 的移动逻辑（通常是停留在屏幕上方左右移动，本次迭代暂不需要完善）
-    }
 
-    @Override
-    public List<BaseBullet> shoot() {
-        // Boss 的射击逻辑（本次迭代暂不出场，返回空列表）
-        return new LinkedList<>();
+        // 【Boss专属移动逻辑】：悬浮于界面上方，仅左右移动，不向下移动
+        // 触壁反弹逻辑
+        if (locationX <= 0) {
+            speedX = Math.abs(speedX); // 撞左墙，向右飞
+        } else if (locationX >= Main.WINDOW_WIDTH - 60) {
+            speedX = -Math.abs(speedX); // 撞右墙，向左飞
+        }
     }
 
     @Override
     public int getScore() {
-        return 100; // 击毁 Boss 得 100 分
+        return 100; // 击毁 Boss 得 100 分 (分值可自定义)
     }
 
     @Override
     public List<AbstractProp> dropProps() {
-        // 返回空列表占位，满足编译器要求
-        return new LinkedList<>();
+        List<AbstractProp> res = new LinkedList<>();
+
+        // 【Boss专属掉落】：必定掉落 3 个道具，且采用最新设计的“差异化掉落概率”
+        for (int i = 0; i < 3; i++) {
+
+            // 生成一个 0.0 到 1.0 之间的随机数
+            double prob = Math.random();
+            String selectedType;
+
+            // 【核心逻辑：区间划分法确定掉落哪种道具】
+            if (prob < 0.3) {
+                selectedType = "Blood";       // 30% 概率掉落加血
+            } else if (prob < 0.6) {
+                selectedType = "Bullet";      // 30% 概率掉落火力
+            } else if (prob < 0.8) {
+                selectedType = "Bomb";        // 20% 概率掉落炸弹
+            } else if (prob < 0.9) {
+                selectedType = "Freeze";      // 10% 概率掉落冰冻
+            } else {
+                selectedType = "BulletPlus";  // 10% 概率掉落超级火力 (SSR级道具)
+            }
+
+            // 给 3 个道具的 x 坐标加上 (-30, 0, 30) 的横向偏移量，使其散开不完全重叠
+            int dropX = this.getLocationX() + (i - 1) * 30;
+
+            AbstractProp prop = PropFactory.createProp(selectedType, dropX, this.getLocationY(), 0, 5);
+            if (prop != null) {
+                res.add(prop);
+            }
+        }
+        return res;
     }
 }

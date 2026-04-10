@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.*;
 
+
 /**
  * 游戏主面板，游戏启动  游戏总构造函数
  * @author hitsz
@@ -40,7 +41,7 @@ public class Game extends JPanel {
     private final int enemyMaxNumber = 5;
 
     //英雄机和敌机射击周期
-    protected double shootCycle = 20;
+    protected double shootCycle = 10;
     private int shootCounter = 0;
 
     //敌机生成周期
@@ -52,6 +53,13 @@ public class Game extends JPanel {
 
     //游戏结束标志
     private boolean gameOverFlag = false;
+
+    // ==========================================
+    // 【新增】Boss 敌机生成控制机制
+    // ==========================================
+    private int bossThreshold = 300;   // 设定触发 Boss 生成的分数阈值（每 300 分生成一次）
+    private int lastBossScore = 0;     // 记录上一次触发 Boss 时的分数档位
+    private boolean hasBoss = false;   // 标记当前屏幕上是否已经存在 Boss
 
     public Game() {
         //game类用于游戏的控制，英雄机的创建与之无关，在game中创建英雄级违反单一对象原则，不能保证英雄机的唯一性
@@ -81,34 +89,39 @@ public class Game extends JPanel {
 
                 enemySpawnCounter++;
                 //TODO:在game中创建敌机违反单一职责、开闭原则和依赖倒转（第二次实验课已改正）
-                //针对接口编程，而不是针对实现编程
-                // 产生敌机（实验二：工厂方法模式，4种敌机随机出现）
                 if (enemySpawnCounter >= enemySpawnCycle && enemyAircrafts.size() < enemyMaxNumber) {
                     enemySpawnCounter = 0;
 
-                    EnemyFactory enemyFactory; // 声明抽象工厂接口
+                    // ==========================================
+                    // 【策略模式 & 工厂模式结合】：Boss 敌机生成逻辑
+                    // ==========================================
+                    // 判断当前分数是否跨越了下一个 Boss 的触发阈值
+                    if (score >= lastBossScore + bossThreshold) {
+                        // 如果当前屏幕上没有 Boss，则生成它
+                        if (!hasBoss) {
+                            EnemyFactory bossFactory = new BossFactory();
+                            enemyAircrafts.add(bossFactory.createEnemy());
 
-                    double randomValue = Math.random();
-                    // 按照设定的概率分配不同的具体工厂
-                    if (randomValue < 0.10) {
-                        // 10% 概率生成王牌敌机
-                        enemyFactory = new EliteProFactory();
-                    } else if (randomValue < 0.30) {
-                        // 20% 概率生成精锐敌机 (ElitePlus)
-                        enemyFactory = new ElitePlusFactory();
-                    } else if (randomValue < 0.60) {
-                        // 30% 概率生成精英敌机 (Elite)
-                        enemyFactory = new EliteFactory();
+                            hasBoss = true;                  // 锁定状态，防止同时生成多架
+                            lastBossScore += bossThreshold;  // 抬高下一个 Boss 的触发门槛
+                            System.out.println("警告：分数达到 " + score + "，Boss 敌机降临！");
+                        }
                     } else {
-                        // 40% 概率生成普通敌机 (Mob)
-                        enemyFactory = new MobFactory();
+                        // 原有的普通、精英、精锐、王牌敌机随机生成逻辑
+                        EnemyFactory enemyFactory;
+                        double randomValue = Math.random();
+                        if (randomValue < 0.10) {
+                            enemyFactory = new EliteProFactory();
+                        } else if (randomValue < 0.25) {
+                            enemyFactory = new ElitePlusFactory();
+                        } else if (randomValue < 0.50) {
+                            enemyFactory = new EliteFactory();
+                        } else {
+                            enemyFactory = new MobFactory();
+                        }
+                        enemyAircrafts.add(enemyFactory.createEnemy());
                     }
-
-                    // 【核心依赖倒转】：Game 类不关心具体生成的是什么敌机，也不用传坐标参数
-                    // 统一调用抽象工厂的 createEnemy() 方法即可！
-                    enemyAircrafts.add(enemyFactory.createEnemy());
                 }
-
                 // 飞机发射子弹
                 shootAction();
                 // 子弹移动
@@ -192,13 +205,22 @@ public class Game extends JPanel {
                 if (enemyAircraft.notValid()) {
                     continue;
                 }
-
+                //使用【多态】实现击毁敌机加分和掉落道具
                 // 子弹击中敌机
                 if (enemyAircraft.crash(bullet)) {
                     enemyAircraft.decreaseHp(bullet.getPower());
                     bullet.vanish();
 
                     if (enemyAircraft.notValid()) {
+
+                        // ==========================================
+                        // 【新增】：如果被击毁的是 Boss，解除 Boss 锁定状态
+                        // ==========================================
+                        if (enemyAircraft instanceof BossEnemy) {
+                            hasBoss = false;
+                            System.out.println("Boss 敌机被击毁！准备迎接下一波挑战！");
+                        }
+
                         enemyAircraft.vanish();  // 标记敌机为无效
 
                         // 【多态重构核心】：彻底消灭 instanceof！

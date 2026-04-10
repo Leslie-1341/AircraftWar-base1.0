@@ -3,11 +3,11 @@ package edu.hitsz.aircraft;
 // 【新增导包】因为要用到窗口宽度和图片高度，需要引入这两个类
 import edu.hitsz.application.ImageManager;
 import edu.hitsz.application.Main;
-import edu.hitsz.bullet.BaseBullet;
-import edu.hitsz.bullet.HeroBullet;
+// 【新增导包】引入直射策略
+import edu.hitsz.strategy.StraightShootStrategy;
 
-import java.util.LinkedList;
-import java.util.List;
+// 注意：删除了 BaseBullet, HeroBullet, List, LinkedList 的导包，
+// 因为发射逻辑已经全部交给了策略类，英雄机不再亲自动手造子弹了！
 
 /**
  * 英雄飞机，游戏玩家操控  继承于飞机类
@@ -16,12 +16,7 @@ import java.util.List;
 //第一次实验课，重构英雄机代码，改为双重锁的单例模式
 public class HeroAircraft extends AbstractAircraft {
 
-    // 每次射击发射子弹数量
-    private int shootNum = 3;
-    // 子弹威力
-    private int power = 30;
-    // 子弹射击方向 (向上发射：-1，向下发射：1)
-    private int direction = -1;
+    // 注意：shootNum, power, direction 的属性声明已删除，因为父类已经提供了 protected 属性
 
     // 【修改 1】声明一个私有、静态、带有 volatile 关键字的唯一实例变量
     private volatile static HeroAircraft instance;
@@ -29,6 +24,19 @@ public class HeroAircraft extends AbstractAircraft {
     // 【修改 2】将构造函数的 public 改为 private，禁止外部直接 new
     private HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
+
+        // ==========================================
+        // 【策略模式修改】：在这里初始化继承自父类的射击属性
+        // ==========================================
+        // 每次射击发射子弹数量 (初始无道具状态下，改为单发直射)
+        this.shootNum = 1;
+        // 子弹威力
+        this.power = 30;
+        // 子弹射击方向 (向上发射：-1，向下发射：1)
+        this.direction = -1;
+
+        // 【核心操作】：在飞机出生时，为其装备默认的“直射策略”武器！
+        this.shootStrategy = new StraightShootStrategy();
     }
 
     // 【修改 3】提供全局唯一的访问点（双重检查锁定 DCL）
@@ -46,7 +54,7 @@ public class HeroAircraft extends AbstractAircraft {
                             Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight(),
                             0,
                             0,
-                            100
+                            200
                     );
                 }
             }
@@ -59,25 +67,9 @@ public class HeroAircraft extends AbstractAircraft {
         // 英雄机由鼠标控制，不通过forward函数移动
     }
 
-    @Override
-    /**
-     * 通过射击产生子弹
-     * @return 射击出的子弹List
-     */
-    public List<BaseBullet> shoot() {
-        List<BaseBullet> res = new LinkedList<>();
-        int x = this.getLocationX();
-        int y = this.getLocationY() + direction*2;
-        int speedX = 0;
-        int speedY = this.getSpeedY() + direction*5;
-        BaseBullet bullet;
-        for(int i=0; i<shootNum; i++){
-            // 子弹发射位置相对飞机位置向前偏移
-            // 多个子弹横向分散
-            bullet = new HeroBullet(x + (i*2 - shootNum + 1)*10, y, speedX, speedY, power);
-            res.add(bullet);
-        }
-        return res;
-    }
+    // ==========================================
+    // 【弹道使用策略模式】
+    // 删除shoot()方法，发射子弹代码由父类中的StraightShootStrategy完成
+    // ==========================================
 
 }

@@ -1,8 +1,10 @@
 package edu.hitsz.aircraft;
 
 import edu.hitsz.application.Main;
-import edu.hitsz.bullet.BaseBullet;
+// 【修改导包】移除了 BaseBullet 的导入，因为不用亲自造子弹了
 import edu.hitsz.prop.AbstractProp;
+// 【新增导包】引入不发射策略
+import edu.hitsz.strategy.NoneShootStrategy;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -16,6 +18,12 @@ public class MobEnemy extends AbstractEnemy {
 
     public MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
+
+        // ==========================================
+        // 【策略模式修改】：普通敌机不发子弹，所以不需要配 power 等参数
+        // 直接为其装备“不发射策略”即可
+        // ==========================================
+        this.shootStrategy = new NoneShootStrategy();
     }
 
     @Override
@@ -27,10 +35,10 @@ public class MobEnemy extends AbstractEnemy {
         }
     }
 
-    @Override
-    public List<BaseBullet> shoot() {
-        return new LinkedList<>();
-    }
+    // ==========================================
+    // 【代码大瘦身】
+    // 原来那个返回空列表的 shoot() 方法已被彻底删除！
+    // ==========================================
 
     @Override
     public int getScore() {

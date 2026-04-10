@@ -1,0 +1,90 @@
+@startuml
+'https://plantuml.com/class-diagram
+title 弹道系统策略模式结构图 (Strategy Pattern)
+
+' ==========================================
+' 1. 上下文角色 (Context)
+' ==========================================
+abstract class AbstractAircraft {
+    ' 维护对抽象策略的引用
+    # shootStrategy: ShootStrategy
+    ' 提供设置策略的方法，支持动态切换武器
+    + setShootStrategy(shootStrategy: ShootStrategy): void
+    ' 提供设置子弹数量的方法（供道具生效时调用）
+    + setShootNum(shootNum: int): void
+
+    ' 执行策略的方法 (对应代码中的 shoot 方法)
+    + shoot(): List<BaseBullet>
+
+    ' 飞机自身的数据接口（供外包的策略算法调用以获取实时状态）
+    + getLocationX(): int
+    + getLocationY(): int
+    + getSpeedY(): int
+    + getDirection(): int
+    + getShootNum(): int
+    + getPower(): int
+}
+
+class HeroAircraft {
+}
+class MobEnemy {
+}
+class EliteEnemy {
+}
+class ElitePlusEnemy {
+}
+class EliteProEnemy {
+}
+class BossEnemy {
+}
+
+AbstractAircraft <|-- HeroAircraft
+AbstractAircraft <|-- MobEnemy
+AbstractAircraft <|-- EliteEnemy
+AbstractAircraft <|-- ElitePlusEnemy
+AbstractAircraft <|-- EliteProEnemy
+AbstractAircraft <|-- BossEnemy
+
+' ==========================================
+' 2. 抽象策略角色 (Strategy)
+' ==========================================
+interface ShootStrategy <<interface>> {
+    ' 执行射击算法，传入上下文(飞机)以获取坐标、方向、弹量等数据
+    + {abstract} doShoot(aircraft: AbstractAircraft): List<BaseBullet>
+}
+
+' ==========================================
+' 3. 具体策略角色 (Concrete Strategies)
+' ==========================================
+class StraightShootStrategy {
+    ' 实现直射弹道（单排/双排均可通过该策略自动适配）
+    + doShoot(aircraft: AbstractAircraft): List<BaseBullet>
+}
+
+class ScatterShootStrategy {
+    ' 实现散射弹道（扇形，自带横向扩散速度）
+    + doShoot(aircraft: AbstractAircraft): List<BaseBullet>
+}
+
+class RingShootStrategy {
+    ' 实现环射弹道（360度均分发射）
+    + doShoot(aircraft: AbstractAircraft): List<BaseBullet>
+}
+
+class NoneShootStrategy {
+    ' 实现不发射逻辑（专供普通敌机使用）
+    + doShoot(aircraft: AbstractAircraft): List<BaseBullet>
+}
+
+ShootStrategy <|.. StraightShootStrategy
+ShootStrategy <|.. ScatterShootStrategy
+ShootStrategy <|.. RingShootStrategy
+ShootStrategy <|.. NoneShootStrategy
+
+' ==========================================
+' 关系连线
+' ==========================================
+' Context 聚合 Strategy (空心菱形箭头)
+AbstractAircraft o--> ShootStrategy : 维护策略接口的引用
+
+@enduml

@@ -7,6 +7,7 @@ import java.util.List;
  * 敌机抽象父类
  * 继承自飞行物抽象类，并为所有敌机定义了特有的多态规范
  */
+//子类共有属性提取至父类中
 public abstract class AbstractEnemy extends AbstractAircraft {
 
     /**
