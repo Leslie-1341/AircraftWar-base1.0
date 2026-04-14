@@ -14,7 +14,7 @@ public class EliteProFactory implements EnemyFactory {
                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
                 initialSpeedX,
                 7,
-                120 // 王牌敌机血量最厚
+                120 // 王牌敌机血量设为 120
         );
     }
 }

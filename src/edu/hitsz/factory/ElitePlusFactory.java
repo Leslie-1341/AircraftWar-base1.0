@@ -13,8 +13,8 @@ public class ElitePlusFactory implements EnemyFactory {
         return new ElitePlusEnemy(
                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())),
                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
-                initialSpeedX, // 赋予横向速度
-                8, // 下落速度稍慢一点，给玩家反应时间
+                initialSpeedX, // 横向速度
+                8, // 下落速度
                 90 // 精锐敌机血量
         );
     }

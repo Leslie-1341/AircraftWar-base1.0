@@ -38,7 +38,5 @@ public abstract class AbstractEnemy extends AbstractAircraft {
      */
     public abstract List<AbstractProp> dropProps();
 
-    // 注意：像 forward() 和 shoot() 等飞行和射击的基本抽象方法，
-    // 已经在更上层的 AbstractAircraft 中定义过了，这里不需要重复声明，
-    // 具体的敌机子类（如 EliteEnemy）会直接重写那些方法。
+    // forward() 和 shoot() 等飞行和射击的基本抽象方法，已在 AbstractAircraft 中定义过了，不需要重复声明，具体的敌机子类会重写那些方法。
 }

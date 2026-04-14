@@ -30,7 +30,7 @@ public class PropFactory {
             case "Freeze":
                 return new FreezeSupply(x, y, speedX, speedY);
             default:
-                // 严格对齐指导书：处理未知类型时抛出异常
+                // 处理未知类型时抛出异常
                 throw new IllegalArgumentException("Unknown product type！Type: " + propType);
         }
     }

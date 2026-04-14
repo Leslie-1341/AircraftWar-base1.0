@@ -77,7 +77,7 @@ public abstract class AbstractAircraft extends AbstractFlyingObject {
         if (this.shootStrategy == null) {
             return new LinkedList<>();
         }
-        // 委托给具体的策略对象执行，并将自身 (this) 传递过去
+        // 委托给具体的策略对象执行，并将自身传递过去
         return this.shootStrategy.doShoot(this);
     }
 

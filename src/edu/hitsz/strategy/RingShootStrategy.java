@@ -28,7 +28,7 @@ public class RingShootStrategy implements ShootStrategy {
         int baseSpeed = 5;
 
         for (int i = 0; i < shootNum; i++) {
-            // 【核心数学公式】：将 360 度（2π）平均分成 shootNum 份
+            // 【数学公式】：将 360 度（2π）平均分成 shootNum 份
             double angle = i * 2 * Math.PI / shootNum;
 
             // 利用三角函数计算 X 和 Y 方向的分量速度

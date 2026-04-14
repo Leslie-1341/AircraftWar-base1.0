@@ -62,7 +62,6 @@ public class Game extends JPanel {
     private boolean hasBoss = false;   // 标记当前屏幕上是否已经存在 Boss
 
     public Game() {
-        //game类用于游戏的控制，英雄机的创建与之无关，在game中创建英雄级违反单一对象原则，不能保证英雄机的唯一性
         //TODO：使用单例模式改进代码，把对象的使用和创建分离，坐标和速度从game中分离（第二次实验课已完成）
         heroAircraft = HeroAircraft.getInstance();
         enemyAircrafts = new LinkedList<>();
@@ -107,7 +106,7 @@ public class Game extends JPanel {
                             System.out.println("警告：分数达到 " + score + "，Boss 敌机降临！");
                         }
                     } else {
-                        // 原有的普通、精英、精锐、王牌敌机随机生成逻辑
+                        // 普通、精英、精锐、王牌敌机随机生成逻辑
                         EnemyFactory enemyFactory;
                         double randomValue = Math.random();
                         if (randomValue < 0.10) {
@@ -189,8 +188,9 @@ public class Game extends JPanel {
      * 2. 英雄攻击/撞击敌机
      * 3. 英雄获得补给
      */
-    // TODO 敌机子弹攻击英雄机
-    //TODO：多态表现，提供统一接口，对于不同类型的敌机，返回对应的击毁分数和道具掉落概率（第二次实验课已完成）
+    // TODO 敌机子弹攻击英雄机（第二次实验课已完成）
+    // TODO：多态，提供统一接口，对于不同类型的敌机，返回对应的击毁分数和道具掉落概率（第二次实验课已完成）
+
     // ===============================================
     // 1. 英雄子弹攻击敌机
     // ===============================================
@@ -200,7 +200,7 @@ public class Game extends JPanel {
             if (bullet.notValid()) {
                 continue;
             }
-            // 注意：循环变量必须使用 AbstractEnemy 类型，以便调用它特有的多态方法
+
             for (AbstractEnemy enemyAircraft : enemyAircrafts) {
                 if (enemyAircraft.notValid()) {
                     continue;
@@ -223,12 +223,11 @@ public class Game extends JPanel {
 
                         enemyAircraft.vanish();  // 标记敌机为无效
 
-                        // 【多态重构核心】：彻底消灭 instanceof！
+                        // 【多态重构】：删除 instanceof
                         // 1. 获取这架敌机专属的分数
                         score += enemyAircraft.getScore();
 
-                        // 2. 获取这架敌机掉落的道具，并统统加入游离道具集合中
-                        // Game 类不再关心它到底是什么飞机、概率是多少、该掉什么道具
+                        // 2. 获取这架敌机掉落的道具，并加入游离道具集合中
                         props.addAll(enemyAircraft.dropProps());
                     }
                 }
@@ -257,7 +256,7 @@ public class Game extends JPanel {
             }
         }
         // Todo: 我方获得道具，道具生效
-        //  道具的创建过程放在game里面违反单一职责原则，放到敌机父类中（第二次实验课已完成）
+        //  道具的创建过程放在game里面违反单一职责原则，应当放到敌机父类中（第二次实验课已完成）
         // ===============================================
         // 2. 我方获得道具，道具生效
         // ===============================================
@@ -267,17 +266,13 @@ public class Game extends JPanel {
             }
             // 当英雄机和道具发生碰撞
             if (heroAircraft.crash(prop)) {
-
-                // 【核心重构】：利用多态，让道具自己决定自己该干什么！
-                // Game 类从此不再关心道具具体的加血数值或效果机制
+                // 【核心重构】：利用多态，让道具自行决定效果
                 prop.active(heroAircraft);
-
                 // 道具被吸收后，标记为失效并消失
                 prop.vanish();
             }
         }
     }
-
 
     /**
      * 后处理：
@@ -289,8 +284,7 @@ public class Game extends JPanel {
         enemyBullets.removeIf(AbstractFlyingObject::notValid);
         heroBullets.removeIf(AbstractFlyingObject::notValid);
         enemyAircrafts.removeIf(AbstractFlyingObject::notValid);
-        // Todo: 删除无效道具
-        // 【把清理道具的代码放在这个方法内部的最下面】
+        // Todo: 删除无效道具（第三次实验课已完成）
         props.removeIf(AbstractFlyingObject::notValid);
     }
 
@@ -331,8 +325,7 @@ public class Game extends JPanel {
         paintImageWithPositionRevised(g, heroBullets);
         paintImageWithPositionRevised(g, enemyAircrafts);
 
-        // Todo: 绘制道具
-        // 【修改这里：把绘制道具的代码放在这里，一定要在方法内部】
+        // Todo: 绘制道具（第二次实验课已完成）
         paintImageWithPositionRevised(g, props);
 
         g.drawImage(ImageManager.HERO_IMAGE, heroAircraft.getLocationX() - ImageManager.HERO_IMAGE.getWidth() / 2,
