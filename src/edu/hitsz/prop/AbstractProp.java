@@ -11,7 +11,7 @@ public abstract class AbstractProp extends AbstractFlyingObject {
 
     /**
      * 【新增多态接口】：道具生效
-     * @param heroAircraft 吃到道具的英雄机
+     * @param heroAircraft
      */
     public abstract void active(HeroAircraft heroAircraft);
 

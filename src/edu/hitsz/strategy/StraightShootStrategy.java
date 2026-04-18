@@ -20,7 +20,6 @@ public class StraightShootStrategy implements ShootStrategy {
         List<BaseBullet> res = new LinkedList<>();
 
         // 1. 获取当前飞机的基础射击属性
-        // 注意：这要求 AbstractAircraft 父类必须有这些 getter 方法
         int direction = aircraft.getDirection();
         int x = aircraft.getLocationX();
         int y = aircraft.getLocationY() + direction * 2;
@@ -32,7 +31,6 @@ public class StraightShootStrategy implements ShootStrategy {
         // 2. 生成子弹
         for (int i = 0; i < shootNum; i++) {
             BaseBullet bullet;
-            // 极其精妙的数学公式：x + (i * 2 - shootNum + 1) * 10
             // 当 shootNum=1 时，偏移量为 0（正中间）
             // 当 shootNum=2 时，偏移量为 -10 和 10（左右双排）
             int bulletX = x + (i * 2 - shootNum + 1) * 10;

@@ -35,11 +35,6 @@ public class MobEnemy extends AbstractEnemy {
         }
     }
 
-    // ==========================================
-    // 【代码大瘦身】
-    // 原来那个返回空列表的 shoot() 方法已被彻底删除！
-    // ==========================================
-
     @Override
     public int getScore() {
         return 10; // 普通敌机 10 分

@@ -1,9 +1,14 @@
 @startuml
 'https://plantuml.com/class-diagram
-'放继承关系，单例模式需要新建一个puml文件
+title 全局继承关系图 (Inheritance Hierarchy)
 
-abstract class AbstractFlyingObject
-{
+skinparam nodesep 40
+skinparam ranksep 60
+
+' ================================
+' 飞行物体抽象父类
+' ================================
+abstract class AbstractFlyingObject {
     # locationX:int
     # locationY:int
     # speedX:int
@@ -26,139 +31,147 @@ abstract class AbstractFlyingObject
     + notValid():boolean
     + vanish():void
 }
-abstract class AbstractAircraft
-{
-	# maxHp:int
+
+' ================================
+' 飞机类
+' ================================
+abstract class AbstractAircraft {
+    # maxHp:int
     # hp:int
+    # shootStrategy: ShootStrategy
+
     + AbstractAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
     + decreaseHp(int decrease):void
     + getHp():int
-    + {abstract} shoot():List<BaseBullet>
+    + increaseHp(increase: int):void
+    + shoot():List<BaseBullet>
+    + setShootStrategy(shootStrategy: ShootStrategy): void
+    + setShootNum(shootNum: int): void
  }
+AbstractFlyingObject <|-- AbstractAircraft
 
-
+' 1. 英雄机 (单例模式)
 class HeroAircraft {
+    - {static} instance: HeroAircraft
     - shootNum:int
     - power:int
     - direction:int
-    + HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
-    + forward():void
-    + shoot():List<BaseBullet>
-}
 
+    ' 构造函数私有化
+    - HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+    ' 无参获取实例
+    + {static} getInstance(): HeroAircraft
+    + forward():void
+}
 AbstractAircraft <|-- HeroAircraft
 
-' ================================
-'第一次实验课，新建抽象敌机父类和4种子类敌机
-' ================================
+' 2. 抽象敌机
 abstract class AbstractEnemy {
     + AbstractEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + {abstract} getScore(): int
+    + {abstract} dropProps(): List<AbstractProp>
 }
 AbstractAircraft <|-- AbstractEnemy
 
-' 1. 普通敌机
 class MobEnemy {
     + MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
-    + shoot():List<BaseBullet>
+    + getScore(): int
+    + dropProps(): List<AbstractProp>
 }
 AbstractEnemy <|-- MobEnemy
 
-' 2. 精英敌机
 class EliteEnemy {
     + EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
-    + shoot():List<BaseBullet>
+    + getScore(): int
+    + dropProps(): List<AbstractProp>
 }
 AbstractEnemy <|-- EliteEnemy
 
-' 3. 精锐敌机 (对应 elitePlus.png)
 class ElitePlusEnemy {
     + ElitePlusEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
-    + shoot():List<BaseBullet>
+    + getScore(): int
+    + dropProps(): List<AbstractProp>
 }
 AbstractEnemy <|-- ElitePlusEnemy
 
-' 4. 王牌敌机 (对应 elitePro.png)
 class EliteProEnemy {
     + EliteProEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
-    + shoot():List<BaseBullet>
+    + getScore(): int
+    + dropProps(): List<AbstractProp>
 }
 AbstractEnemy <|-- EliteProEnemy
 
-' 5. Boss敌机
 class BossEnemy {
     + BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
-    + shoot():List<BaseBullet>
+    + getScore(): int
+    + dropProps(): List<AbstractProp>
 }
 AbstractEnemy <|-- BossEnemy
 
-' ================================
-' 子弹家族
-' ================================
-abstract class BaseBullet
-{
+' ==============================
+' 子弹类
+' ==============================
+abstract class BaseBullet {
     - power:int
     + BaseBullet(int locationX, int locationY, int speedX, int speedY, int power)
     + forward():void
-	+ getPower():int
+    + getPower():int
 }
+AbstractFlyingObject <|-- BaseBullet
 
 class HeroBullet {
     + HeroBullet(int locationX, int locationY, int speedX, int speedY, int power)
 }
+BaseBullet <|-- HeroBullet
 
 class EnemyBullet {
     + EnemyBullet(int locationX, int locationY, int speedX, int speedY, int power)
 }
-
-BaseBullet <|-- HeroBullet
 BaseBullet <|-- EnemyBullet
 
-AbstractFlyingObject <|-- AbstractAircraft
-AbstractFlyingObject <|-- BaseBullet
 
-' ================================
-' 道具家族
-' ================================
-' 1. 抽象道具父类
+' ==============================
+' 道具类
+' ==============================
 abstract class AbstractProp {
     + AbstractProp(int locationX, int locationY, int speedX, int speedY)
     + forward():void
+    + {abstract} active(heroAircraft: HeroAircraft): void
 }
-' 道具父类继承顶级飞行物类
 AbstractFlyingObject <|-- AbstractProp
 
-' 2. 加血道具
 class BloodSupply {
     + BloodSupply(int locationX, int locationY, int speedX, int speedY)
+    + active(heroAircraft: HeroAircraft): void
 }
 AbstractProp <|-- BloodSupply
 
-' 3. 火力道具 (对应 prop_bullet.png)
 class BulletSupply {
     + BulletSupply(int locationX, int locationY, int speedX, int speedY)
+    + active(heroAircraft: HeroAircraft): void
 }
 AbstractProp <|-- BulletSupply
 
-' 4. 超级火力道具 (对应 prop_bulletPlus.png)
 class BulletPlusSupply {
     + BulletPlusSupply(int locationX, int locationY, int speedX, int speedY)
+    + active(heroAircraft: HeroAircraft): void
 }
 AbstractProp <|-- BulletPlusSupply
 
-' 5. 炸弹道具
 class BombSupply {
     + BombSupply(int locationX, int locationY, int speedX, int speedY)
+    + active(heroAircraft: HeroAircraft): void
 }
 AbstractProp <|-- BombSupply
 
-' 6. 冰冻道具 (对应 prop_freeze.png)
 class FreezeSupply {
     + FreezeSupply(int locationX, int locationY, int speedX, int speedY)
+    + active(heroAircraft: HeroAircraft): void
 }
 AbstractProp <|-- FreezeSupply
 

@@ -14,7 +14,7 @@ public class NoneShootStrategy implements ShootStrategy {
 
     @Override
     public List<BaseBullet> doShoot(AbstractAircraft aircraft) {
-        // 直接返回空列表，不生成任何子弹
+        // 返回空列表，不生成任何子弹
         return new LinkedList<>();
     }
 }

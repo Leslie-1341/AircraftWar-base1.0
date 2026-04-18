@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * 散射弹道策略 (Strategy Pattern)
- * 向前发射扇形分布的子弹（带有横向速度）
+ * 向前发射扇形分布的子弹
  */
 public class ScatterShootStrategy implements ShootStrategy {
 
@@ -24,18 +24,17 @@ public class ScatterShootStrategy implements ShootStrategy {
         int y = aircraft.getLocationY() + direction * 2;
         int speedY = aircraft.getSpeedY() + direction * 5;
 
-        // 获取飞机的发射数量（对于王牌敌机，我们在构造函数里设置了 shootNum = 3）
+        // 获取飞机的发射数量（王牌敌机在构造函数里设置了 shootNum = 3）
         int shootNum = aircraft.getShootNum();
         int power = aircraft.getPower();
 
         for (int i = 0; i < shootNum; i++) {
-            // 【核心数学公式】：计算 X 轴的横向散射速度
-            // 这个公式可以完美适配任意数量的子弹散开。
+            // 【数学公式】：计算 X 轴的横向散射速度
             // 当 shootNum = 3 时，(i - 1) * 3 会依次生成 -3, 0, 3 的横向速度 speedX
             int speedX = (int) ((i - (shootNum - 1) / 2.0) * 3);
 
             BaseBullet bullet;
-            // 注意：散射的所有子弹初始 x 坐标都是飞机的中心点，靠 speedX 散开
+            // 散射的所有子弹初始 x 坐标都是飞机的中心点，由 speedX 实现散开效果
             if (aircraft instanceof HeroAircraft) {
                 bullet = new HeroBullet(x, y, speedX, speedY, power);
             } else {

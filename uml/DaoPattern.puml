@@ -1,0 +1,76 @@
+@startuml
+'https://plantuml.com/class-diagram
+title 排行榜数据访问对象模式结构图 (DAO Pattern)
+
+skinparam nodesep 50
+skinparam ranksep 60
+
+' ==========================================
+' 4. 客户端 (Client)
+' ==========================================
+class Game {
+    ' Game类中持有DAO接口的引用，体现“面向接口编程”
+    - recordDao: RecordDao
+    - difficulty: String
+}
+
+' ==========================================
+' 2. 数据访问对象接口 (DAO Interface)
+' ==========================================
+interface RecordDao <<interface>> {
+    + {abstract} getAllRecords(): List<Record>
+    + {abstract} doAdd(record: Record): void
+    + {abstract} doDelete(record: Record): void
+}
+
+' ==========================================
+' 3. 数据访问对象实现类 (DAO Implementation)
+' ==========================================
+class RecordDaoImpl {
+    - records: List<Record>
+    - fileName: String
+
+    ' 【核心修正1】添加 difficulty 参数，体现不同难度对应不同文件的设计
+    + RecordDaoImpl(difficulty: String)
+
+    + getAllRecords(): List<Record>
+    + doAdd(record: Record): void
+    + doDelete(record: Record): void
+
+    ' 私有的文件读写辅助方法
+    - loadRecordsFromFile(): void
+    - saveRecordsToFile(): void
+}
+
+' ==========================================
+' 1. 数值对象实体类 (Value Object / POJO)
+' ==========================================
+class Record {
+    - userName: String
+    - score: int
+    ' 【核心修正2】明确补充 time 属性
+    - time: String
+
+    + Record(userName: String, score: int, time: String)
+    + getUserName(): String
+    + setUserName(userName: String): void
+    + getScore(): int
+    + setScore(score: int): void
+    + getTime(): String
+    + setTime(time: String): void
+}
+
+' ==========================================
+' 关系连线
+' ==========================================
+' 实现接口
+RecordDaoImpl .up.|> RecordDao
+
+' 关联关系 (实现类管理实体)
+RecordDaoImpl --> Record : " manages >"
+
+' 【核心修正3】依赖关系 (Game 只依赖接口和实体类)
+Game ..> RecordDao : " uses >"
+Game ..> Record : " creates >"
+
+@enduml

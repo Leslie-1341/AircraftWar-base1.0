@@ -8,6 +8,14 @@ import edu.hitsz.prop.AbstractProp;
 import edu.hitsz.prop.BloodSupply;
 import edu.hitsz.prop.BulletPlusSupply;
 import edu.hitsz.prop.BulletSupply;
+import edu.hitsz.record.Record;
+import edu.hitsz.record.RecordDao;
+import edu.hitsz.record.RecordDaoImpl;
+import javax.swing.JOptionPane; // 用于弹出输入框
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Collections;
+import java.util.Comparator;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,7 +38,7 @@ public class Game extends JPanel {
     private final Timer timer;
     //时间间隔(ms)，控制刷新频率
     private final int timeInterval = 40;
-    //TODO：抽象出敌机父类，敌机列表改成抽象敌机类型（第二次实验课已完成）
+    //抽象出敌机父类，敌机列表改成抽象敌机类型（第二次实验课已完成）
     private final HeroAircraft heroAircraft;
     private final List<AbstractEnemy> enemyAircrafts;
     private final List<BaseBullet> heroBullets;
@@ -61,9 +69,13 @@ public class Game extends JPanel {
     private int lastBossScore = 0;     // 记录上一次触发 Boss 时的分数档位
     private boolean hasBoss = false;   // 标记当前屏幕上是否已经存在 Boss
 
+    // 【新增】DAO 接口引用
+    private RecordDao recordDao;
+    // 【新增】游戏难度标识（默认设为 MEDIUM，后续实验再做难度选择）
+    private String difficulty = "MEDIUM";
+
     public Game() {
-        //game类用于游戏的控制，英雄机的创建与之无关，在game中创建英雄级违反单一对象原则，不能保证英雄机的唯一性
-        //TODO：使用单例模式改进代码，把对象的使用和创建分离，坐标和速度从game中分离（第二次实验课已完成）
+        //使用单例模式改进代码，把对象的使用和创建分离，坐标和速度从game中分离（第二次实验课已完成）
         heroAircraft = HeroAircraft.getInstance();
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
@@ -74,7 +86,8 @@ public class Game extends JPanel {
         new HeroController(this, heroAircraft);
 
         this.timer = new Timer("game-action-timer", true);
-
+        // 【新增】初始化 DAO，传入当前难度，它会自动去读取对应的文件
+        this.recordDao = new RecordDaoImpl(this.difficulty);
     }
 
     /**
@@ -88,7 +101,7 @@ public class Game extends JPanel {
             public void run() {
 
                 enemySpawnCounter++;
-                //TODO:在game中创建敌机违反单一职责、开闭原则和依赖倒转（第二次实验课已改正）
+                //在game中创建敌机违反单一职责、开闭原则和依赖倒转（第二次实验课已改正）
                 if (enemySpawnCounter >= enemySpawnCycle && enemyAircrafts.size() < enemyMaxNumber) {
                     enemySpawnCounter = 0;
 
@@ -107,7 +120,7 @@ public class Game extends JPanel {
                             System.out.println("警告：分数达到 " + score + "，Boss 敌机降临！");
                         }
                     } else {
-                        // 原有的普通、精英、精锐、王牌敌机随机生成逻辑
+                        // 普通、精英、精锐、王牌敌机随机生成逻辑
                         EnemyFactory enemyFactory;
                         double randomValue = Math.random();
                         if (randomValue < 0.10) {
@@ -138,6 +151,8 @@ public class Game extends JPanel {
                 repaint();
                 // 游戏结束检查
                 checkResultAction();
+                // 打印排行榜
+                printLeaderboard();
             }
         };
         // 以固定延迟时间进行执行：本次任务执行完成后，延迟 timeInterval 再执行下一次
@@ -189,8 +204,9 @@ public class Game extends JPanel {
      * 2. 英雄攻击/撞击敌机
      * 3. 英雄获得补给
      */
-    // TODO 敌机子弹攻击英雄机
-    //TODO：多态表现，提供统一接口，对于不同类型的敌机，返回对应的击毁分数和道具掉落概率（第二次实验课已完成）
+    // 敌机子弹攻击英雄机（第二次实验课已完成）
+    // 多态，提供统一接口，对于不同类型的敌机，返回对应的击毁分数和道具掉落概率（第二次实验课已完成）
+
     // ===============================================
     // 1. 英雄子弹攻击敌机
     // ===============================================
@@ -200,7 +216,7 @@ public class Game extends JPanel {
             if (bullet.notValid()) {
                 continue;
             }
-            // 注意：循环变量必须使用 AbstractEnemy 类型，以便调用它特有的多态方法
+
             for (AbstractEnemy enemyAircraft : enemyAircrafts) {
                 if (enemyAircraft.notValid()) {
                     continue;
@@ -223,12 +239,11 @@ public class Game extends JPanel {
 
                         enemyAircraft.vanish();  // 标记敌机为无效
 
-                        // 【多态重构核心】：彻底消灭 instanceof！
+                        // 【多态重构】：删除 instanceof
                         // 1. 获取这架敌机专属的分数
                         score += enemyAircraft.getScore();
 
-                        // 2. 获取这架敌机掉落的道具，并统统加入游离道具集合中
-                        // Game 类不再关心它到底是什么飞机、概率是多少、该掉什么道具
+                        // 2. 获取这架敌机掉落的道具，并加入游离道具集合中
                         props.addAll(enemyAircraft.dropProps());
                     }
                 }
@@ -256,8 +271,8 @@ public class Game extends JPanel {
                 bullet.vanish();
             }
         }
-        // Todo: 我方获得道具，道具生效
-        //  道具的创建过程放在game里面违反单一职责原则，放到敌机父类中（第二次实验课已完成）
+        // 我方获得道具，道具生效
+        // 道具的创建过程放在game里面违反单一职责原则，应当放到敌机父类中（第二次实验课已完成）
         // ===============================================
         // 2. 我方获得道具，道具生效
         // ===============================================
@@ -267,17 +282,13 @@ public class Game extends JPanel {
             }
             // 当英雄机和道具发生碰撞
             if (heroAircraft.crash(prop)) {
-
-                // 【核心重构】：利用多态，让道具自己决定自己该干什么！
-                // Game 类从此不再关心道具具体的加血数值或效果机制
+                // 【核心重构】：利用多态，让道具自行决定效果
                 prop.active(heroAircraft);
-
                 // 道具被吸收后，标记为失效并消失
                 prop.vanish();
             }
         }
     }
-
 
     /**
      * 后处理：
@@ -289,8 +300,7 @@ public class Game extends JPanel {
         enemyBullets.removeIf(AbstractFlyingObject::notValid);
         heroBullets.removeIf(AbstractFlyingObject::notValid);
         enemyAircrafts.removeIf(AbstractFlyingObject::notValid);
-        // Todo: 删除无效道具
-        // 【把清理道具的代码放在这个方法内部的最下面】
+        // 删除无效道具（第三次实验课已完成）
         props.removeIf(AbstractFlyingObject::notValid);
     }
 
@@ -303,6 +313,60 @@ public class Game extends JPanel {
             timer.cancel(); // 取消定时器并终止所有调度任务
             gameOverFlag = true;
             System.out.println("Game Over!");
+
+            // ==========================================
+            // 【新增】第四次实验：保存记录与控制台打印排行榜
+            // ==========================================
+
+            // 1. 弹窗提示玩家输入名字
+            String userName = JOptionPane.showInputDialog(
+                    null,
+                    "游戏结束，你的得分为 " + score + "。\n请输入名字记录得分：",
+                    "输入",
+                    JOptionPane.QUESTION_MESSAGE
+            );
+
+            // 2. 如果玩家没输入或者点了取消，使用指导书要求的默认名
+            if (userName == null || userName.trim().isEmpty()) {
+                userName = "testUserName";
+            }
+
+            // 3. 格式化当前时间为 "MM-dd HH:mm"
+            SimpleDateFormat formatter = new SimpleDateFormat("MM-dd HH:mm");
+            String currentTime = formatter.format(new Date());
+
+            // 4. 组装数据并调用 DAO 保存到文件
+            Record newRecord = new Record(userName, score, currentTime);
+            recordDao.doAdd(newRecord);
+
+            // 5. 打印排行榜到控制台
+            printLeaderboard();
+        }
+    }
+    /**
+     * 【新增】在控制台按指导书格式打印排行榜
+     */
+    private void printLeaderboard() {
+        // 1. 从 DAO 获取所有记录
+        List<Record> allRecords = recordDao.getAllRecords();
+
+        // 2. 对记录按分数从大到小排序
+        Collections.sort(allRecords, new Comparator<Record>() {
+            @Override
+            public int compare(Record r1, Record r2) {
+                // 降序排序
+                return Integer.compare(r2.getScore(), r1.getScore());
+            }
+        });
+
+        // 3. 按照指导书要求的格式打印输出
+        System.out.println("得分排行榜");
+        System.out.println("******************");
+
+        for (int i = 0; i < allRecords.size(); i++) {
+            Record r = allRecords.get(i);
+            System.out.printf("第%d名: %s, %d, %s\n",
+                    (i + 1), r.getUserName(), r.getScore(), r.getTime());
         }
     }
 
@@ -331,8 +395,7 @@ public class Game extends JPanel {
         paintImageWithPositionRevised(g, heroBullets);
         paintImageWithPositionRevised(g, enemyAircrafts);
 
-        // Todo: 绘制道具
-        // 【修改这里：把绘制道具的代码放在这里，一定要在方法内部】
+        // 绘制道具（第二次实验课已完成）
         paintImageWithPositionRevised(g, props);
 
         g.drawImage(ImageManager.HERO_IMAGE, heroAircraft.getLocationX() - ImageManager.HERO_IMAGE.getWidth() / 2,
