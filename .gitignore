@@ -1,0 +1,39 @@
+# 编译输出目录
+target/
+bin/
+build/
+out/
+
+# 所有编译后的字节码
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# IDEA 相关
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VSCode 相关
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
