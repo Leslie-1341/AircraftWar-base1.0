@@ -11,6 +11,10 @@ import edu.hitsz.prop.BulletSupply;
 import edu.hitsz.record.Record;
 import edu.hitsz.record.RecordDao;
 import edu.hitsz.record.RecordDaoImpl;
+import edu.hitsz.strategy.StraightShootStrategy;
+import edu.hitsz.view.LeaderboardTable;
+import edu.hitsz.application.MusicThread;
+
 import javax.swing.JOptionPane; // 用于弹出输入框
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -71,12 +75,19 @@ public class Game extends JPanel {
 
     // 【新增】DAO 接口引用
     private RecordDao recordDao;
-    // 【新增】游戏难度标识（默认设为 MEDIUM，后续实验再做难度选择）
-    private String difficulty = "MEDIUM";
+    // 【修改】去掉默认值，等待 UI 传进来
+    private String difficulty;
+    // 【新增】接收音效开关状态
+    private boolean musicEnabled;
+    // 【新增】背景音乐线程引用
+    private MusicThread bgmThread;
 
-    public Game() {
+    public Game(String difficulty, boolean musicEnabled) {
         //使用单例模式改进代码，把对象的使用和创建分离，坐标和速度从game中分离（第二次实验课已完成）
         heroAircraft = HeroAircraft.getInstance();
+        // 【核心修改】重置英雄机状态，防止复用上一局死亡状态
+        // 坐标和血量可以根据 Main.WINDOW 尺寸自行调整
+        heroAircraft.reset(Main.WINDOW_WIDTH / 2, Main.WINDOW_HEIGHT - 100, 100);
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
         enemyBullets = new LinkedList<>();
@@ -86,15 +97,23 @@ public class Game extends JPanel {
         new HeroController(this, heroAircraft);
 
         this.timer = new Timer("game-action-timer", true);
-        // 【新增】初始化 DAO，传入当前难度，它会自动去读取对应的文件
+        // 保存从 StartMenu 传来的选择
+        this.difficulty = difficulty;
+        this.musicEnabled = musicEnabled;
+        // 【新增】初始化 DAO，传入当前难度，会自动去读取对应的文件
         this.recordDao = new RecordDaoImpl(this.difficulty);
+
     }
 
     /**
      * 游戏启动入口，执行游戏逻辑
      */
     public void action() {
-
+        // 【新增】如果开启了音效，启动背景音乐线程
+        if (musicEnabled) {
+            bgmThread = new MusicThread("src/videos/bgm.wav", true);
+            bgmThread.start();
+        }
         // 定时任务：绘制、对象产生、碰撞判定、及结束判定
         TimerTask task = new TimerTask() {
             @Override
@@ -151,8 +170,6 @@ public class Game extends JPanel {
                 repaint();
                 // 游戏结束检查
                 checkResultAction();
-                // 打印排行榜
-                printLeaderboard();
             }
         };
         // 以固定延迟时间进行执行：本次任务执行完成后，延迟 timeInterval 再执行下一次
@@ -271,8 +288,7 @@ public class Game extends JPanel {
                 bullet.vanish();
             }
         }
-        // 我方获得道具，道具生效
-        // 道具的创建过程放在game里面违反单一职责原则，应当放到敌机父类中（第二次实验课已完成）
+
         // ===============================================
         // 2. 我方获得道具，道具生效
         // ===============================================
@@ -282,8 +298,29 @@ public class Game extends JPanel {
             }
             // 当英雄机和道具发生碰撞
             if (heroAircraft.crash(prop)) {
-                // 【核心重构】：利用多态，让道具自行决定效果
+                // 1. 调用道具生效方法（改变英雄机射击策略等）
                 prop.active(heroAircraft);
+
+                // ==========================================
+                // 【新增：实验五多线程限时火力恢复逻辑】
+                // ==========================================
+                // 如果吃到的是火力补给或超级火力补给，开启一个新线程负责计时
+                if (prop instanceof BulletSupply || prop instanceof BulletPlusSupply) {
+                    Runnable r = () -> {
+                        try {
+                            // 计时 5 秒
+                            Thread.sleep(5000);
+                            // 5秒后，将英雄机的射击策略恢复为初始的直射
+                            heroAircraft.setShootStrategy(new StraightShootStrategy());
+                            System.out.println("火力道具已过期，恢复初始射击状态");
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    // 启动这个负责倒计时的后台线程
+                    new Thread(r).start();
+                }
+
                 // 道具被吸收后，标记为失效并消失
                 prop.vanish();
             }
@@ -310,14 +347,27 @@ public class Game extends JPanel {
     private void checkResultAction() {
         // 游戏结束检查英雄机是否存活
         if (heroAircraft.getHp() <= 0) {
-            timer.cancel(); // 取消定时器并终止所有调度任务
+            // 1. 终止游戏主循环定时器
+            timer.cancel();
             gameOverFlag = true;
             System.out.println("Game Over!");
 
             // ==========================================
-            // 【新增】第四次实验：保存记录与控制台打印排行榜
+            // 【实验五：多线程音效控制】
             // ==========================================
+            // 如果开启了音效，游戏结束时必须停止背景音乐线程
+            if (musicEnabled && bgmThread != null) {
+                bgmThread.stopMusic();
+            }
 
+            // 可选：播放游戏结束的单次音效 (不循环)
+            if (musicEnabled) {
+                new MusicThread("src/videos/game_over.wav", false).start();
+            }
+
+            // ==========================================
+            // 【数据持久化：DAO 模式】
+            // ==========================================
             // 1. 弹窗提示玩家输入名字
             String userName = JOptionPane.showInputDialog(
                     null,
@@ -326,50 +376,33 @@ public class Game extends JPanel {
                     JOptionPane.QUESTION_MESSAGE
             );
 
-            // 2. 如果玩家没输入或者点了取消，使用指导书要求的默认名
+            // 2. 默认名处理逻辑
             if (userName == null || userName.trim().isEmpty()) {
                 userName = "testUserName";
             }
 
-            // 3. 格式化当前时间为 "MM-dd HH:mm"
+            // 3. 获取当前系统时间
             SimpleDateFormat formatter = new SimpleDateFormat("MM-dd HH:mm");
             String currentTime = formatter.format(new Date());
 
-            // 4. 组装数据并调用 DAO 保存到文件
+            // 4. 调用 DAO 保存记录
             Record newRecord = new Record(userName, score, currentTime);
             recordDao.doAdd(newRecord);
 
-            // 5. 打印排行榜到控制台
-            printLeaderboard();
+            // ==========================================
+            // 【界面切换：CardLayout】
+            // ==========================================
+            // 1. 实例化排行榜界面 (传入当前难度以加载对应文件)
+            LeaderboardTable table = new LeaderboardTable(this.difficulty);
+
+            // 2. 将排行榜面板添加到 Main 的卡片容器中
+            // 使用 Main 类的静态引用确保在同一个容器内切换
+            edu.hitsz.application.Main.cardPanel.add(table.getMainPanel(), "SCORE_TABLE");
+
+            // 3. 切换卡片显示
+            edu.hitsz.application.Main.cardLayout.show(edu.hitsz.application.Main.cardPanel, "SCORE_TABLE");
         }
     }
-    /**
-     * 【新增】在控制台按指导书格式打印排行榜
-     */
-    private void printLeaderboard() {
-        // 1. 从 DAO 获取所有记录
-        List<Record> allRecords = recordDao.getAllRecords();
-
-        // 2. 对记录按分数从大到小排序
-        Collections.sort(allRecords, new Comparator<Record>() {
-            @Override
-            public int compare(Record r1, Record r2) {
-                // 降序排序
-                return Integer.compare(r2.getScore(), r1.getScore());
-            }
-        });
-
-        // 3. 按照指导书要求的格式打印输出
-        System.out.println("得分排行榜");
-        System.out.println("******************");
-
-        for (int i = 0; i < allRecords.size(); i++) {
-            Record r = allRecords.get(i);
-            System.out.printf("第%d名: %s, %d, %s\n",
-                    (i + 1), r.getUserName(), r.getScore(), r.getTime());
-        }
-    }
-
     //***********************
     //      Paint 各部分
     //***********************
