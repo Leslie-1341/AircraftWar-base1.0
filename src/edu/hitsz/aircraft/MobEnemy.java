@@ -1,9 +1,7 @@
 package edu.hitsz.aircraft;
 
 import edu.hitsz.application.Main;
-// 【修改导包】移除了 BaseBullet 的导入，因为不用亲自造子弹了
 import edu.hitsz.prop.AbstractProp;
-// 【新增导包】引入不发射策略
 import edu.hitsz.strategy.NoneShootStrategy;
 
 import java.util.LinkedList;
@@ -45,4 +43,14 @@ public class MobEnemy extends AbstractEnemy {
         // 普通敌机不掉落道具，返回空列表
         return new LinkedList<>();
     }
+
+    @Override
+    public void onIceActive() {
+        System.out.println("普通敌机被永久冰冻！");
+        // 永久静止[cite: 2]，直接把速度设为0，不需要开线程恢复
+        this.setSpeedY(0);
+        this.setSpeedX(0);
+    }
+    // onBombActive 不用写，继承父类的“直接坠毁”即可
+
 }

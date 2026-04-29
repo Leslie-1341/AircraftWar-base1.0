@@ -1,40 +1,34 @@
 package edu.hitsz.application;
 
-import edu.hitsz.aircraft.*;
-import edu.hitsz.bullet.BaseBullet;
+import edu.hitsz.aircraft.AbstractAircraft;
+import edu.hitsz.aircraft.AbstractEnemy;
+import edu.hitsz.aircraft.BossEnemy;
+import edu.hitsz.aircraft.HeroAircraft;
 import edu.hitsz.basic.AbstractFlyingObject;
+import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.factory.*;
-import edu.hitsz.prop.AbstractProp;
-import edu.hitsz.prop.BloodSupply;
-import edu.hitsz.prop.BulletPlusSupply;
-import edu.hitsz.prop.BulletSupply;
+import edu.hitsz.observer.PropObserver;
+import edu.hitsz.prop.*;
 import edu.hitsz.record.Record;
 import edu.hitsz.record.RecordDao;
 import edu.hitsz.record.RecordDaoImpl;
 import edu.hitsz.strategy.StraightShootStrategy;
 import edu.hitsz.view.LeaderboardTable;
-import edu.hitsz.application.MusicThread;
-
-import javax.swing.JOptionPane; // 用于弹出输入框
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Collections;
-import java.util.Comparator;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
-import java.util.concurrent.*;
 
 
 /**
  * 游戏主面板，游戏启动  游戏总构造函数
  * @author hitsz
  */
-public class Game extends JPanel {
+public abstract class AbstractGame extends JPanel{
 
     private int backGroundTop = 0;
 
@@ -42,22 +36,18 @@ public class Game extends JPanel {
     private final Timer timer;
     //时间间隔(ms)，控制刷新频率
     private final int timeInterval = 40;
-    //抽象出敌机父类，敌机列表改成抽象敌机类型（第二次实验课已完成）
     private final HeroAircraft heroAircraft;
     private final List<AbstractEnemy> enemyAircrafts;
     private final List<BaseBullet> heroBullets;
     private final List<BaseBullet> enemyBullets;
-    // 第一次实验课 声明道具集合
+    // 声明道具集合
     private final List<AbstractProp> props;
-    //屏幕中出现的敌机最大数量
-    private final int enemyMaxNumber = 5;
 
     //英雄机和敌机射击周期
     protected double shootCycle = 10;
     private int shootCounter = 0;
 
     //敌机生成周期
-    private int enemySpawnCycle = 20;
     private int enemySpawnCounter = 0;
 
     //当前玩家分数
@@ -69,7 +59,6 @@ public class Game extends JPanel {
     // ==========================================
     // 【新增】Boss 敌机生成控制机制
     // ==========================================
-    private int bossThreshold = 300;   // 设定触发 Boss 生成的分数阈值（每 300 分生成一次）
     private int lastBossScore = 0;     // 记录上一次触发 Boss 时的分数档位
     private boolean hasBoss = false;   // 标记当前屏幕上是否已经存在 Boss
 
@@ -82,12 +71,22 @@ public class Game extends JPanel {
     // 【新增】背景音乐线程引用
     private MusicThread bgmThread;
 
-    public Game(String difficulty, boolean musicEnabled) {
-        //使用单例模式改进代码，把对象的使用和创建分离，坐标和速度从game中分离（第二次实验课已完成）
+    // ==========================================
+    // 【模板模式：新增难度控制属性】
+    // ==========================================
+    protected int enemyMaxNumber;     // 屏幕中出现敌机最大数量
+    protected int enemySpawnCycle;    // 敌机产生周期
+    protected int bossThreshold;      // Boss 产生的分数阈值
+    protected int bossHp;             // Boss 当前血量
+    protected int timeCount = 0;      // 记录游戏经过的时间（用于难度递增）
+
+    public AbstractGame(String difficulty, boolean musicEnabled) {
+        //使用单例模式改进代码，把对象的使用和创建分离
         heroAircraft = HeroAircraft.getInstance();
-        // 【核心修改】重置英雄机状态，防止复用上一局死亡状态
-        // 坐标和血量可以根据 Main.WINDOW 尺寸自行调整
-        heroAircraft.reset(Main.WINDOW_WIDTH / 2, Main.WINDOW_HEIGHT - 100, 100);
+
+        // 重置英雄机状态，防止复用上一局死亡状态
+        heroAircraft.reset(Main.WINDOW_WIDTH / 2, Main.WINDOW_HEIGHT - 100);
+
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
         enemyBullets = new LinkedList<>();
@@ -97,13 +96,34 @@ public class Game extends JPanel {
         new HeroController(this, heroAircraft);
 
         this.timer = new Timer("game-action-timer", true);
+
         // 保存从 StartMenu 传来的选择
         this.difficulty = difficulty;
         this.musicEnabled = musicEnabled;
-        // 【新增】初始化 DAO，传入当前难度，会自动去读取对应的文件
-        this.recordDao = new RecordDaoImpl(this.difficulty);
 
+        // 初始化 DAO，传入当前难度，会自动去读取对应的文件
+        this.recordDao = new RecordDaoImpl(this.difficulty);
     }
+
+    // ==========================================
+    // 【模板模式：新增钩子方法 (Hooks)】
+    // 交给具体的难度子类（EasyGame, NormalGame, HardGame）去实现[cite: 2]
+    // ==========================================
+
+    /**
+     * 钩子 1：难度随时间递增逻辑
+     */
+    protected abstract void levelUpLogic();
+
+    /**
+     * 钩子 2：是否允许生成 Boss（简单模式不允许[cite: 2]）
+     */
+    protected abstract boolean supportBoss();
+
+    /**
+     * 钩子 3：每次生成 Boss 前的血量调整逻辑（困难模式会递增[cite: 2]）
+     */
+    protected abstract void adjustBossHp();
 
     /**
      * 游戏启动入口，执行游戏逻辑
@@ -118,28 +138,39 @@ public class Game extends JPanel {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
+                // 【新增】：每次循环累计时间
+                timeCount += timeInterval;
+
+                // ==========================================
+                // 【模板模式：调用钩子 1】执行难度提升逻辑
+                // ==========================================
+                levelUpLogic();
 
                 enemySpawnCounter++;
-                //在game中创建敌机违反单一职责、开闭原则和依赖倒转（第二次实验课已改正）
+                // 敌机生成逻辑
                 if (enemySpawnCounter >= enemySpawnCycle && enemyAircrafts.size() < enemyMaxNumber) {
                     enemySpawnCounter = 0;
 
-                    // ==========================================
-                    // 【策略模式 & 工厂模式结合】：Boss 敌机生成逻辑
-                    // ==========================================
                     // 判断当前分数是否跨越了下一个 Boss 的触发阈值
                     if (score >= lastBossScore + bossThreshold) {
-                        // 如果当前屏幕上没有 Boss，则生成它
-                        if (!hasBoss) {
-                            EnemyFactory bossFactory = new BossFactory();
+
+                        // ==========================================
+                        // 【模板模式：调用钩子 2 & 3】Boss 生成逻辑
+                        // ==========================================
+                        if (supportBoss() && !hasBoss) {
+                            // 调用钩子调整血量
+                            adjustBossHp();
+
+                            // 传入动态血量给工厂
+                            EnemyFactory bossFactory = new BossFactory(bossHp);
                             enemyAircrafts.add(bossFactory.createEnemy());
 
-                            hasBoss = true;                  // 锁定状态，防止同时生成多架
-                            lastBossScore += bossThreshold;  // 抬高下一个 Boss 的触发门槛
-                            System.out.println("警告：分数达到 " + score + "，Boss 敌机降临！");
+                            hasBoss = true;
+                            lastBossScore += bossThreshold;
+                            System.out.println("警告：分数达到 " + score + "，Boss 敌机降临！血量: " + bossHp);
                         }
                     } else {
-                        // 普通、精英、精锐、王牌敌机随机生成逻辑
+                        // 普通、精英、精锐、王牌敌机随机生成逻辑 (保持你原有的逻辑不变)
                         EnemyFactory enemyFactory;
                         double randomValue = Math.random();
                         if (randomValue < 0.10) {
@@ -160,7 +191,7 @@ public class Game extends JPanel {
                 bulletsMoveAction();
                 // 飞机移动
                 aircraftsMoveAction();
-                // 【新增】调用道具移动的方法
+                // 调用道具移动的方法
                 propsMoveAction();
                 // 撞击检测
                 crashCheckAction();
@@ -298,7 +329,30 @@ public class Game extends JPanel {
             }
             // 当英雄机和道具发生碰撞
             if (heroAircraft.crash(prop)) {
-                // 1. 调用道具生效方法（改变英雄机射击策略等）
+
+                // ==========================================
+                // 【新增：观察者模式注册逻辑】
+                // 在道具生效前，将当前屏幕上的敌机和敌方子弹全部注册为观察者
+                // ==========================================
+                if (prop instanceof BombSupply) {
+                    BombSupply bomb = (BombSupply) prop;
+                    for (AbstractEnemy enemy : enemyAircrafts) {
+                        bomb.addObserver((PropObserver) enemy);
+                    }
+                    for (BaseBullet bullet : enemyBullets) {
+                        bomb.addObserver((PropObserver) bullet);
+                    }
+                } else if (prop instanceof FreezeSupply) {
+                    FreezeSupply freeze = (FreezeSupply) prop;
+                    for (AbstractEnemy enemy : enemyAircrafts) {
+                        freeze.addObserver((PropObserver) enemy);
+                    }
+                    for (BaseBullet bullet : enemyBullets) {
+                        freeze.addObserver((PropObserver) bullet);
+                    }
+                }
+
+                // 1. 调用道具生效方法（炸弹和冰冻会在这里内部调用 notifyObservers）
                 prop.active(heroAircraft);
 
                 // ==========================================

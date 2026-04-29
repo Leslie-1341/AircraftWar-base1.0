@@ -3,7 +3,6 @@ package edu.hitsz.aircraft;
 import edu.hitsz.application.Main;
 import edu.hitsz.factory.PropFactory;
 import edu.hitsz.prop.AbstractProp;
-// 【新增导包】引入直射策略
 import edu.hitsz.strategy.StraightShootStrategy;
 
 import java.util.LinkedList;
@@ -80,5 +79,10 @@ public class ElitePlusEnemy extends AbstractEnemy {
             res.add(PropFactory.createProp(selectedType, this.getLocationX(), this.getLocationY(), 0, 5));
         }
         return res;
+    }
+
+    @Override
+    public void onIceActive() {
+        this.freezeWithRecovery(3000);
     }
 }

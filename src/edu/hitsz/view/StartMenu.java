@@ -1,6 +1,11 @@
 package edu.hitsz.view;
 
-import edu.hitsz.application.Game;
+// 【修改】导入我们新写的抽象类和三个具体难度类
+
+import edu.hitsz.application.AbstractGame;
+import edu.hitsz.application.EasyGame;
+import edu.hitsz.application.HardGame;
+import edu.hitsz.application.MediumGame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -47,7 +52,7 @@ public class StartMenu {
         mainPanel.add(hardButton);
         mainPanel.add(musicCheckBox);
 
-        // 3. 绑定按钮监听器 (目前仅打印，后续加入界面切换逻辑)
+        // 3. 绑定按钮监听器
         easyButton.addActionListener(e -> {
             selectedDifficulty = "EASY";
             musicEnabled = musicCheckBox.isSelected();
@@ -73,14 +78,27 @@ public class StartMenu {
     private void startGame() {
         System.out.println("准备开始游戏，难度：" + selectedDifficulty);
 
-        // 1. 实例化游戏界面，传入选择的难度和音效状态
-        Game game = new Game(selectedDifficulty, musicEnabled);
+        // ==========================================
+        // 【核心修改：利用多态和模板模式实例化具体游戏】
+        // ==========================================
+        // 1. 声明抽象父类引用
+        AbstractGame game;
 
-        // 2. 将游戏界面添加到 Main 的容器中，并命名为 "GAME"
+        // 2. 根据难度选择，实例化具体的子类对象
+        if ("EASY".equals(selectedDifficulty)) {
+            game = new EasyGame(selectedDifficulty, musicEnabled);
+        } else if ("MEDIUM".equals(selectedDifficulty)) {
+            // 注意：你的按钮设置里普通模式的值是 "MEDIUM"
+            game = new MediumGame(selectedDifficulty, musicEnabled);
+        } else {
+            game = new HardGame(selectedDifficulty, musicEnabled);
+        }
+
+        // 3. 将游戏界面添加到 Main 的容器中，并命名为 "GAME"
         edu.hitsz.application.Main.cardPanel.add(game, "GAME");
         edu.hitsz.application.Main.cardLayout.show(edu.hitsz.application.Main.cardPanel, "GAME");
 
-        // 3. 【修改】直接调用 action() 启动游戏内部的定时器主循环，不需要 new Thread
+        // 4. 调用模板方法 action() 启动游戏内部的定时器主循环
         game.action();
     }
 

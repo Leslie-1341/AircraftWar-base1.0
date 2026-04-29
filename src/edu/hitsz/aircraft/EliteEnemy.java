@@ -2,7 +2,6 @@ package edu.hitsz.aircraft;
 
 import edu.hitsz.factory.PropFactory;
 import edu.hitsz.prop.AbstractProp;
-// 【新增导包】引入直射策略
 import edu.hitsz.strategy.StraightShootStrategy;
 
 import java.util.LinkedList;
@@ -54,4 +53,13 @@ public class EliteEnemy extends AbstractEnemy {
         }
         return res;
     }
+
+    @Override
+    public void onIceActive() {
+        // 精英敌机静止 4s[cite: 2]
+        this.freezeWithRecovery(4000);
+    }
+
+    // SuperEliteEnemy 同理，只要在它的类里写 this.freezeWithRecovery(3000); 即可[cite: 2]
+    // 炸弹逻辑都不用写，直接继承父类的坠毁。
 }

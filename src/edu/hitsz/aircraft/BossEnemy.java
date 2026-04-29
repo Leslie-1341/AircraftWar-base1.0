@@ -3,7 +3,6 @@ package edu.hitsz.aircraft;
 import edu.hitsz.application.Main;
 import edu.hitsz.factory.PropFactory;
 import edu.hitsz.prop.AbstractProp;
-// 引入环射策略
 import edu.hitsz.strategy.RingShootStrategy;
 
 import java.util.LinkedList;
@@ -76,5 +75,17 @@ public class BossEnemy extends AbstractEnemy {
             }
         }
         return res;
+    }
+
+    @Override
+    public void onBombActive() {
+        // Boss 敌机不受影响[cite: 2]
+        System.out.println("Boss 无视了炸弹的冲击波！");
+    }
+
+    @Override
+    public void onIceActive() {
+        // Boss 敌机不受影响[cite: 2]
+        System.out.println("Boss 无视了冰冻效果！");
     }
 }
