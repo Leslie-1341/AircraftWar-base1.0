@@ -1,36 +1,34 @@
 package edu.hitsz.application;
 
-import edu.hitsz.aircraft.*;
-import edu.hitsz.bullet.BaseBullet;
+import edu.hitsz.aircraft.AbstractAircraft;
+import edu.hitsz.aircraft.AbstractEnemy;
+import edu.hitsz.aircraft.BossEnemy;
+import edu.hitsz.aircraft.HeroAircraft;
 import edu.hitsz.basic.AbstractFlyingObject;
+import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.factory.*;
-import edu.hitsz.prop.AbstractProp;
-import edu.hitsz.prop.BloodSupply;
-import edu.hitsz.prop.BulletPlusSupply;
-import edu.hitsz.prop.BulletSupply;
+import edu.hitsz.observer.PropObserver;
+import edu.hitsz.prop.*;
 import edu.hitsz.record.Record;
 import edu.hitsz.record.RecordDao;
 import edu.hitsz.record.RecordDaoImpl;
-import javax.swing.JOptionPane; // 用于弹出输入框
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Collections;
-import java.util.Comparator;
+import edu.hitsz.strategy.StraightShootStrategy;
+import edu.hitsz.view.LeaderboardTable;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
-import java.util.concurrent.*;
 
 
 /**
  * 游戏主面板，游戏启动  游戏总构造函数
  * @author hitsz
  */
-public class Game extends JPanel {
+public abstract class AbstractGame extends JPanel{
 
     private int backGroundTop = 0;
 
@@ -38,22 +36,18 @@ public class Game extends JPanel {
     private final Timer timer;
     //时间间隔(ms)，控制刷新频率
     private final int timeInterval = 40;
-    //抽象出敌机父类，敌机列表改成抽象敌机类型（第二次实验课已完成）
     private final HeroAircraft heroAircraft;
     private final List<AbstractEnemy> enemyAircrafts;
     private final List<BaseBullet> heroBullets;
     private final List<BaseBullet> enemyBullets;
-    // 第一次实验课 声明道具集合
+    // 声明道具集合
     private final List<AbstractProp> props;
-    //屏幕中出现的敌机最大数量
-    private final int enemyMaxNumber = 5;
 
     //英雄机和敌机射击周期
     protected double shootCycle = 10;
     private int shootCounter = 0;
 
     //敌机生成周期
-    private int enemySpawnCycle = 20;
     private int enemySpawnCounter = 0;
 
     //当前玩家分数
@@ -65,18 +59,34 @@ public class Game extends JPanel {
     // ==========================================
     // 【新增】Boss 敌机生成控制机制
     // ==========================================
-    private int bossThreshold = 300;   // 设定触发 Boss 生成的分数阈值（每 300 分生成一次）
     private int lastBossScore = 0;     // 记录上一次触发 Boss 时的分数档位
     private boolean hasBoss = false;   // 标记当前屏幕上是否已经存在 Boss
 
     // 【新增】DAO 接口引用
     private RecordDao recordDao;
-    // 【新增】游戏难度标识（默认设为 MEDIUM，后续实验再做难度选择）
-    private String difficulty = "MEDIUM";
+    // 【修改】去掉默认值，等待 UI 传进来
+    private String difficulty;
+    // 【新增】接收音效开关状态
+    private boolean musicEnabled;
+    // 【新增】背景音乐线程引用
+    private MusicThread bgmThread;
 
-    public Game() {
-        //使用单例模式改进代码，把对象的使用和创建分离，坐标和速度从game中分离（第二次实验课已完成）
+    // ==========================================
+    // 【模板模式：新增难度控制属性】
+    // ==========================================
+    protected int enemyMaxNumber;     // 屏幕中出现敌机最大数量
+    protected int enemySpawnCycle;    // 敌机产生周期
+    protected int bossThreshold;      // Boss 产生的分数阈值
+    protected int bossHp;             // Boss 当前血量
+    protected int timeCount = 0;      // 记录游戏经过的时间（用于难度递增）
+
+    public AbstractGame(String difficulty, boolean musicEnabled) {
+        //使用单例模式改进代码，把对象的使用和创建分离
         heroAircraft = HeroAircraft.getInstance();
+
+        // 重置英雄机状态，防止复用上一局死亡状态
+        heroAircraft.reset(Main.WINDOW_WIDTH / 2, Main.WINDOW_HEIGHT - 100);
+
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
         enemyBullets = new LinkedList<>();
@@ -86,41 +96,81 @@ public class Game extends JPanel {
         new HeroController(this, heroAircraft);
 
         this.timer = new Timer("game-action-timer", true);
-        // 【新增】初始化 DAO，传入当前难度，它会自动去读取对应的文件
+
+        // 保存从 StartMenu 传来的选择
+        this.difficulty = difficulty;
+        this.musicEnabled = musicEnabled;
+
+        // 初始化 DAO，传入当前难度，会自动去读取对应的文件
         this.recordDao = new RecordDaoImpl(this.difficulty);
     }
+
+    // ==========================================
+    // 【模板模式：新增钩子方法 (Hooks)】
+    // 交给具体的难度子类（EasyGame, NormalGame, HardGame）去实现[cite: 2]
+    // ==========================================
+
+    /**
+     * 钩子 1：难度随时间递增逻辑
+     */
+    protected abstract void levelUpLogic();
+
+    /**
+     * 钩子 2：是否允许生成 Boss（简单模式不允许[cite: 2]）
+     */
+    protected abstract boolean supportBoss();
+
+    /**
+     * 钩子 3：每次生成 Boss 前的血量调整逻辑（困难模式会递增[cite: 2]）
+     */
+    protected abstract void adjustBossHp();
 
     /**
      * 游戏启动入口，执行游戏逻辑
      */
     public void action() {
-
+        // 【新增】如果开启了音效，启动背景音乐线程
+        if (musicEnabled) {
+            bgmThread = new MusicThread("src/videos/bgm.wav", true);
+            bgmThread.start();
+        }
         // 定时任务：绘制、对象产生、碰撞判定、及结束判定
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
+                // 【新增】：每次循环累计时间
+                timeCount += timeInterval;
+
+                // ==========================================
+                // 【模板模式：调用钩子 1】执行难度提升逻辑
+                // ==========================================
+                levelUpLogic();
 
                 enemySpawnCounter++;
-                //在game中创建敌机违反单一职责、开闭原则和依赖倒转（第二次实验课已改正）
+                // 敌机生成逻辑
                 if (enemySpawnCounter >= enemySpawnCycle && enemyAircrafts.size() < enemyMaxNumber) {
                     enemySpawnCounter = 0;
 
-                    // ==========================================
-                    // 【策略模式 & 工厂模式结合】：Boss 敌机生成逻辑
-                    // ==========================================
                     // 判断当前分数是否跨越了下一个 Boss 的触发阈值
                     if (score >= lastBossScore + bossThreshold) {
-                        // 如果当前屏幕上没有 Boss，则生成它
-                        if (!hasBoss) {
-                            EnemyFactory bossFactory = new BossFactory();
+
+                        // ==========================================
+                        // 【模板模式：调用钩子 2 & 3】Boss 生成逻辑
+                        // ==========================================
+                        if (supportBoss() && !hasBoss) {
+                            // 调用钩子调整血量
+                            adjustBossHp();
+
+                            // 传入动态血量给工厂
+                            EnemyFactory bossFactory = new BossFactory(bossHp);
                             enemyAircrafts.add(bossFactory.createEnemy());
 
-                            hasBoss = true;                  // 锁定状态，防止同时生成多架
-                            lastBossScore += bossThreshold;  // 抬高下一个 Boss 的触发门槛
-                            System.out.println("警告：分数达到 " + score + "，Boss 敌机降临！");
+                            hasBoss = true;
+                            lastBossScore += bossThreshold;
+                            System.out.println("警告：分数达到 " + score + "，Boss 敌机降临！血量: " + bossHp);
                         }
                     } else {
-                        // 普通、精英、精锐、王牌敌机随机生成逻辑
+                        // 普通、精英、精锐、王牌敌机随机生成逻辑 (保持你原有的逻辑不变)
                         EnemyFactory enemyFactory;
                         double randomValue = Math.random();
                         if (randomValue < 0.10) {
@@ -141,7 +191,7 @@ public class Game extends JPanel {
                 bulletsMoveAction();
                 // 飞机移动
                 aircraftsMoveAction();
-                // 【新增】调用道具移动的方法
+                // 调用道具移动的方法
                 propsMoveAction();
                 // 撞击检测
                 crashCheckAction();
@@ -151,8 +201,6 @@ public class Game extends JPanel {
                 repaint();
                 // 游戏结束检查
                 checkResultAction();
-                // 打印排行榜
-                printLeaderboard();
             }
         };
         // 以固定延迟时间进行执行：本次任务执行完成后，延迟 timeInterval 再执行下一次
@@ -271,8 +319,7 @@ public class Game extends JPanel {
                 bullet.vanish();
             }
         }
-        // 我方获得道具，道具生效
-        // 道具的创建过程放在game里面违反单一职责原则，应当放到敌机父类中（第二次实验课已完成）
+
         // ===============================================
         // 2. 我方获得道具，道具生效
         // ===============================================
@@ -282,8 +329,52 @@ public class Game extends JPanel {
             }
             // 当英雄机和道具发生碰撞
             if (heroAircraft.crash(prop)) {
-                // 【核心重构】：利用多态，让道具自行决定效果
+
+                // ==========================================
+                // 【新增：观察者模式注册逻辑】
+                // 在道具生效前，将当前屏幕上的敌机和敌方子弹全部注册为观察者
+                // ==========================================
+                if (prop instanceof BombSupply) {
+                    BombSupply bomb = (BombSupply) prop;
+                    for (AbstractEnemy enemy : enemyAircrafts) {
+                        bomb.addObserver((PropObserver) enemy);
+                    }
+                    for (BaseBullet bullet : enemyBullets) {
+                        bomb.addObserver((PropObserver) bullet);
+                    }
+                } else if (prop instanceof FreezeSupply) {
+                    FreezeSupply freeze = (FreezeSupply) prop;
+                    for (AbstractEnemy enemy : enemyAircrafts) {
+                        freeze.addObserver((PropObserver) enemy);
+                    }
+                    for (BaseBullet bullet : enemyBullets) {
+                        freeze.addObserver((PropObserver) bullet);
+                    }
+                }
+
+                // 1. 调用道具生效方法（炸弹和冰冻会在这里内部调用 notifyObservers）
                 prop.active(heroAircraft);
+
+                // ==========================================
+                // 【新增：实验五多线程限时火力恢复逻辑】
+                // ==========================================
+                // 如果吃到的是火力补给或超级火力补给，开启一个新线程负责计时
+                if (prop instanceof BulletSupply || prop instanceof BulletPlusSupply) {
+                    Runnable r = () -> {
+                        try {
+                            // 计时 5 秒
+                            Thread.sleep(5000);
+                            // 5秒后，将英雄机的射击策略恢复为初始的直射
+                            heroAircraft.setShootStrategy(new StraightShootStrategy());
+                            System.out.println("火力道具已过期，恢复初始射击状态");
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    };
+                    // 启动这个负责倒计时的后台线程
+                    new Thread(r).start();
+                }
+
                 // 道具被吸收后，标记为失效并消失
                 prop.vanish();
             }
@@ -310,14 +401,27 @@ public class Game extends JPanel {
     private void checkResultAction() {
         // 游戏结束检查英雄机是否存活
         if (heroAircraft.getHp() <= 0) {
-            timer.cancel(); // 取消定时器并终止所有调度任务
+            // 1. 终止游戏主循环定时器
+            timer.cancel();
             gameOverFlag = true;
             System.out.println("Game Over!");
 
             // ==========================================
-            // 【新增】第四次实验：保存记录与控制台打印排行榜
+            // 【实验五：多线程音效控制】
             // ==========================================
+            // 如果开启了音效，游戏结束时必须停止背景音乐线程
+            if (musicEnabled && bgmThread != null) {
+                bgmThread.stopMusic();
+            }
 
+            // 可选：播放游戏结束的单次音效 (不循环)
+            if (musicEnabled) {
+                new MusicThread("src/videos/game_over.wav", false).start();
+            }
+
+            // ==========================================
+            // 【数据持久化：DAO 模式】
+            // ==========================================
             // 1. 弹窗提示玩家输入名字
             String userName = JOptionPane.showInputDialog(
                     null,
@@ -326,50 +430,33 @@ public class Game extends JPanel {
                     JOptionPane.QUESTION_MESSAGE
             );
 
-            // 2. 如果玩家没输入或者点了取消，使用指导书要求的默认名
+            // 2. 默认名处理逻辑
             if (userName == null || userName.trim().isEmpty()) {
                 userName = "testUserName";
             }
 
-            // 3. 格式化当前时间为 "MM-dd HH:mm"
+            // 3. 获取当前系统时间
             SimpleDateFormat formatter = new SimpleDateFormat("MM-dd HH:mm");
             String currentTime = formatter.format(new Date());
 
-            // 4. 组装数据并调用 DAO 保存到文件
+            // 4. 调用 DAO 保存记录
             Record newRecord = new Record(userName, score, currentTime);
             recordDao.doAdd(newRecord);
 
-            // 5. 打印排行榜到控制台
-            printLeaderboard();
+            // ==========================================
+            // 【界面切换：CardLayout】
+            // ==========================================
+            // 1. 实例化排行榜界面 (传入当前难度以加载对应文件)
+            LeaderboardTable table = new LeaderboardTable(this.difficulty);
+
+            // 2. 将排行榜面板添加到 Main 的卡片容器中
+            // 使用 Main 类的静态引用确保在同一个容器内切换
+            edu.hitsz.application.Main.cardPanel.add(table.getMainPanel(), "SCORE_TABLE");
+
+            // 3. 切换卡片显示
+            edu.hitsz.application.Main.cardLayout.show(edu.hitsz.application.Main.cardPanel, "SCORE_TABLE");
         }
     }
-    /**
-     * 【新增】在控制台按指导书格式打印排行榜
-     */
-    private void printLeaderboard() {
-        // 1. 从 DAO 获取所有记录
-        List<Record> allRecords = recordDao.getAllRecords();
-
-        // 2. 对记录按分数从大到小排序
-        Collections.sort(allRecords, new Comparator<Record>() {
-            @Override
-            public int compare(Record r1, Record r2) {
-                // 降序排序
-                return Integer.compare(r2.getScore(), r1.getScore());
-            }
-        });
-
-        // 3. 按照指导书要求的格式打印输出
-        System.out.println("得分排行榜");
-        System.out.println("******************");
-
-        for (int i = 0; i < allRecords.size(); i++) {
-            Record r = allRecords.get(i);
-            System.out.printf("第%d名: %s, %d, %s\n",
-                    (i + 1), r.getUserName(), r.getScore(), r.getTime());
-        }
-    }
-
     //***********************
     //      Paint 各部分
     //***********************

@@ -3,7 +3,6 @@ package edu.hitsz.aircraft;
 import edu.hitsz.application.Main;
 import edu.hitsz.factory.PropFactory;
 import edu.hitsz.prop.AbstractProp;
-// 【新增导包】引入即将编写的散射策略
 import edu.hitsz.strategy.ScatterShootStrategy;
 
 import java.util.LinkedList;
@@ -73,5 +72,32 @@ public class EliteProEnemy extends AbstractEnemy {
             res.add(PropFactory.createProp(selectedType, this.getLocationX(), this.getLocationY(), 0, 5));
         }
         return res;
+    }
+
+    @Override
+    public void onBombActive() {
+        // 炸弹对其只是掉血，不直接坠毁[cite: 2]
+        System.out.println("王牌敌机遭到炸弹攻击，扣除 50 点血量！");
+        this.decreaseHp(50); // 具体扣多少血你可以自己设定
+    }
+
+    @Override
+    public void onIceActive() {
+        System.out.println("王牌敌机抵抗了严寒，仅仅被减速 5 秒！");
+        // 减速 5s 后恢复[cite: 2]
+        Runnable r = () -> {
+            int originalSpeedY = this.getSpeedY();
+            // 速度减半
+            this.setSpeedY(originalSpeedY / 2);
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (!this.notValid()) {
+                this.setSpeedY(originalSpeedY);
+            }
+        };
+        new Thread(r).start();
     }
 }

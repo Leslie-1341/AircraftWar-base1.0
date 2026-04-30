@@ -8,7 +8,8 @@ import edu.hitsz.strategy.StraightShootStrategy;
  * 英雄飞机，游戏玩家操控  继承于飞机类
  * @author hitsz
  */
-//第一次实验课，重构英雄机代码，改为双重锁的单例模式
+
+// 重构英雄机代码，改为双重锁的单例模式
 public class HeroAircraft extends AbstractAircraft {
     // 【修改 1】声明一个私有、静态、带有 volatile 关键字的唯一实例变量
     private volatile static HeroAircraft instance;
@@ -46,7 +47,7 @@ public class HeroAircraft extends AbstractAircraft {
                             Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight(),
                             0,
                             0,
-                            200
+                            500
                     );
                 }
             }
@@ -59,4 +60,16 @@ public class HeroAircraft extends AbstractAircraft {
         // 英雄机由鼠标控制，不通过forward函数移动
     }
 
+    /**
+     * 【新增】重置英雄机状态，用于开启新游戏
+     * @param x 初始X坐标
+     * @param y 初始Y坐标
+     */
+    public void reset(int x, int y) {
+        this.locationX = x;
+        this.locationY = y;
+        this.isValid = true;
+        this.hp = this.maxHp; // 恢复为自己在构造函数里设定的最大血量
+        this.shootStrategy = new StraightShootStrategy();
+    }
 }

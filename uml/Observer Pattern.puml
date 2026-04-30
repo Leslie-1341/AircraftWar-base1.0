@@ -1,0 +1,73 @@
+@startuml
+title 道具生效观察者模式 (Observer Pattern)
+
+' 1. 抽象观察者接口
+interface PropObserver <<interface>> {
+    + onBombActive(): void
+    + onIceActive(): void
+}
+
+' 2. 具体观察者实现
+class MobEnemy implements PropObserver {
+    + onBombActive(): void
+    + onIceActive(): void
+}
+
+class EliteEnemy implements PropObserver {
+    + onBombActive(): void
+    + onIceActive(): void
+}
+
+class SuperEliteEnemy implements PropObserver {
+    + onBombActive(): void
+    + onIceActive(): void
+}
+
+class AceEnemy implements PropObserver {
+    + onBombActive(): void
+    + onIceActive(): void
+}
+
+class BossEnemy implements PropObserver {
+    + onBombActive(): void
+    + onIceActive(): void
+}
+
+class EnemyBullet implements PropObserver {
+    + onBombActive(): void
+    + onIceActive(): void
+}
+
+' 3. 抽象观察目标
+abstract class PropSubject {
+    # observers: List<PropObserver>
+    + addObserver(observer: PropObserver): void
+    + removeObserver(observer: PropObserver): void
+    + notifyObservers(): void
+}
+
+' 4. 具体观察目标
+class BombSupply extends PropSubject {
+    + notifyObservers(): void
+    + activate(): void
+}
+
+class IceSupply extends PropSubject {
+    + notifyObservers(): void
+    + activate(): void
+}
+
+' 5. 依赖关系
+PropSubject o--> PropObserver : "通知"
+
+' 布局调整 (可选，为了让图更好看)
+PropSubject -[hidden]right-> PropObserver
+BombSupply -[hidden]right-> IceSupply
+MobEnemy -[hidden]right-> EliteEnemy
+
+'note right of PropSubject::notifyObservers
+'  遍历 observers 列表，
+'  调用相应的方法通知它们
+'end note
+
+@enduml

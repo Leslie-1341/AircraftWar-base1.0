@@ -1,8 +1,7 @@
 package edu.hitsz.aircraft;
 
-import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.basic.AbstractFlyingObject;
-// 【新增导包】导入策略接口
+import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.strategy.ShootStrategy;
 
 import java.util.LinkedList;
@@ -61,7 +60,7 @@ public abstract class AbstractAircraft extends AbstractFlyingObject {
     }
 
     // ==========================================
-    // 【新增 3】提供动态设置/切换策略的方法
+    // 【新增】提供动态设置/切换策略的方法
     // ==========================================
     public void setShootStrategy(ShootStrategy shootStrategy) {
         this.shootStrategy = shootStrategy;

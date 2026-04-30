@@ -104,6 +104,21 @@ public abstract class AbstractFlyingObject {
         return speedY;
     }
 
+    // ==========================================
+    // 【新增】：补充速度的 Getter 和 Setter 方法
+    // ==========================================
+    public int getSpeedX() {
+        return speedX;
+    }
+
+    public void setSpeedX(int speedX) {
+        this.speedX = speedX;
+    }
+
+    public void setSpeedY(int speedY) {
+        this.speedY = speedY;
+    }
+
     public BufferedImage getImage() {
         if (image == null){
             image = ImageManager.get(this);
