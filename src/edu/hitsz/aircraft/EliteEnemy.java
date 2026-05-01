@@ -8,8 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class EliteEnemy extends AbstractEnemy {
-    // TODO：把子类中共有的参数提取到父类中（第三次实验课已完成）
-
+    
     public EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
 

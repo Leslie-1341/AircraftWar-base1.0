@@ -57,22 +57,21 @@ public abstract class AbstractGame extends JPanel{
     private boolean gameOverFlag = false;
 
     // ==========================================
-    // 【新增】Boss 敌机生成控制机制
+    // Boss 敌机生成控制机制
     // ==========================================
     private int lastBossScore = 0;     // 记录上一次触发 Boss 时的分数档位
     private boolean hasBoss = false;   // 标记当前屏幕上是否已经存在 Boss
 
-    // 【新增】DAO 接口引用
+    // DAO 接口引用
     private RecordDao recordDao;
-    // 【修改】去掉默认值，等待 UI 传进来
     private String difficulty;
-    // 【新增】接收音效开关状态
+    // 接收音效开关状态
     private boolean musicEnabled;
-    // 【新增】背景音乐线程引用
+    // 背景音乐线程引用
     private MusicThread bgmThread;
 
     // ==========================================
-    // 【模板模式：新增难度控制属性】
+    // 【模板模式：难度控制属性】
     // ==========================================
     protected int enemyMaxNumber;     // 屏幕中出现敌机最大数量
     protected int enemySpawnCycle;    // 敌机产生周期
@@ -105,23 +104,22 @@ public abstract class AbstractGame extends JPanel{
         this.recordDao = new RecordDaoImpl(this.difficulty);
     }
 
-    // ==========================================
-    // 【模板模式：新增钩子方法 (Hooks)】
-    // 交给具体的难度子类（EasyGame, NormalGame, HardGame）去实现[cite: 2]
-    // ==========================================
-
+    // ================================
+    // 【模板模式：钩子方法 (Hooks)】
+    // 交给具体的难度子类去实现
+    // ================================
     /**
      * 钩子 1：难度随时间递增逻辑
      */
     protected abstract void levelUpLogic();
 
     /**
-     * 钩子 2：是否允许生成 Boss（简单模式不允许[cite: 2]）
+     * 钩子 2：是否允许生成 Boss（简单模式不允许）
      */
     protected abstract boolean supportBoss();
 
     /**
-     * 钩子 3：每次生成 Boss 前的血量调整逻辑（困难模式会递增[cite: 2]）
+     * 钩子 3：每次生成 Boss 前的血量调整逻辑（困难模式会递增）
      */
     protected abstract void adjustBossHp();
 
@@ -129,7 +127,7 @@ public abstract class AbstractGame extends JPanel{
      * 游戏启动入口，执行游戏逻辑
      */
     public void action() {
-        // 【新增】如果开启了音效，启动背景音乐线程
+        // 如果开启了音效，启动背景音乐线程
         if (musicEnabled) {
             bgmThread = new MusicThread("src/videos/bgm.wav", true);
             bgmThread.start();
@@ -138,7 +136,7 @@ public abstract class AbstractGame extends JPanel{
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                // 【新增】：每次循环累计时间
+                // ：每次循环累计时间
                 timeCount += timeInterval;
 
                 // ==========================================
@@ -239,7 +237,7 @@ public abstract class AbstractGame extends JPanel{
             enemyAircraft.forward();
         }
     }
-    // 【新增】完整的道具移动方法
+    // 完整的道具移动方法
     private void propsMoveAction() {
         for (AbstractProp prop : props) {
             prop.forward();
@@ -278,7 +276,7 @@ public abstract class AbstractGame extends JPanel{
                     if (enemyAircraft.notValid()) {
 
                         // ==========================================
-                        // 【新增】：如果被击毁的是 Boss，解除 Boss 锁定状态
+                        // ：如果被击毁的是 Boss，解除 Boss 锁定状态
                         // ==========================================
                         if (enemyAircraft instanceof BossEnemy) {
                             hasBoss = false;
@@ -331,7 +329,7 @@ public abstract class AbstractGame extends JPanel{
             if (heroAircraft.crash(prop)) {
 
                 // ==========================================
-                // 【新增：观察者模式注册逻辑】
+                // 【：观察者模式注册逻辑】
                 // 在道具生效前，将当前屏幕上的敌机和敌方子弹全部注册为观察者
                 // ==========================================
                 if (prop instanceof BombSupply) {
@@ -356,7 +354,7 @@ public abstract class AbstractGame extends JPanel{
                 prop.active(heroAircraft);
 
                 // ==========================================
-                // 【新增：实验五多线程限时火力恢复逻辑】
+                // 【：实验五多线程限时火力恢复逻辑】
                 // ==========================================
                 // 如果吃到的是火力补给或超级火力补给，开启一个新线程负责计时
                 if (prop instanceof BulletSupply || prop instanceof BulletPlusSupply) {

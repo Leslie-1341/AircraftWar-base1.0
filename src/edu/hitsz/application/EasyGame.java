@@ -15,7 +15,6 @@ public class EasyGame extends AbstractGame {
     @Override
     protected void levelUpLogic() {
         // 简单难度不随游戏时间变化，全程保持初始设定
-        // 这里什么都不用写
     }
 
     @Override

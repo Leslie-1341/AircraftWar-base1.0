@@ -1,7 +1,6 @@
 package edu.hitsz.prop;
 
 import edu.hitsz.aircraft.HeroAircraft;
-// 【新增导包】
 import edu.hitsz.strategy.RingShootStrategy;
 
 public class BulletPlusSupply extends AbstractProp {

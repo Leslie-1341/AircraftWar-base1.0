@@ -19,12 +19,12 @@ public class EnemyBullet extends BaseBullet implements PropObserver {
     @Override
     public void onBombActive() {
         System.out.println("敌机子弹被炸弹冲击波清空！");
-        this.vanish(); // 敌机子弹直接消失[cite: 2]
+        this.vanish(); // 敌机子弹直接消失
     }
 
     @Override
     public void onIceActive() {
-        // 敌机子弹静止 5s 后恢复[cite: 2]
+        // 敌机子弹静止 5s 后恢复
         System.out.println("敌机子弹被冰冻 5 秒！");
         Runnable r = () -> {
             int originalSpeedY = this.getSpeedY();

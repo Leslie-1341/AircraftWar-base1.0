@@ -1,176 +1,207 @@
 @startuml
-'https://plantuml.com/class-diagram
-title 全局继承关系图 (Inheritance Hierarchy)
+title 核心飞行实体继承关系图 (Core Entities Inheritance Hierarchy)
 
-skinparam nodesep 40
-skinparam ranksep 60
+skinparam nodesep 30
+skinparam ranksep 50
+' skinparam classAttributeIconSize 0
 
 ' ================================
-' 飞行物体抽象父类
+' 顶级抽象基类
 ' ================================
 abstract class AbstractFlyingObject {
-    # locationX:int
-    # locationY:int
-    # speedX:int
-    # speedY:int
-    # image:BufferedImage
-    # width:int
-    # height:int
-    # isValid:boolean
+    # locationX: int
+    # locationY: int
+    # speedX: int
+    # speedY: int
+    # image: BufferedImage
+    # width: int
+    # height: int
+    # isValid: boolean
 
-    + AbstractFlyingObject(int locationX, int locationY, int speedX, int speedY)
-    + forward():void
-    + crash(AbstractFlyingObject flyingObject):boolean
-    + setLocation(double locationX, double locationY):void
-    + getLocationX():int
-    + getLocationY():int
-    + getSpeedY():int
-    + getImage():BufferedImage
-    + getWidth():int
-    + getHeight():int
-    + notValid():boolean
-    + vanish():void
+    + AbstractFlyingObject(locationX: int, locationY: int, speedX: int, speedY: int)
+    + forward(): void
+    + crash(flyingObject: AbstractFlyingObject): boolean
+    + setLocation(locationX: double, locationY: double): void
+    + getLocationX(): int
+    + getLocationY(): int
+    + getSpeedX(): int
+    + getSpeedY(): int
+    + setSpeedX(speedX: int): void
+    + setSpeedY(speedY: int): void
+    + getImage(): BufferedImage
+    + getWidth(): int
+    + getHeight(): int
+    + notValid(): boolean
+    + vanish(): void
 }
 
 ' ================================
-' 飞机类
+' 飞机派生类群
 ' ================================
 abstract class AbstractAircraft {
-    # maxHp:int
-    # hp:int
+    # maxHp: int
+    # hp: int
+    # shootNum: int
+    # power: int
+    # direction: int
     # shootStrategy: ShootStrategy
 
-    + AbstractAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
-    + decreaseHp(int decrease):void
-    + getHp():int
-    + increaseHp(increase: int):void
-    + shoot():List<BaseBullet>
+    + AbstractAircraft(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
+    + decreaseHp(decrease: int): void
+    + increaseHp(increase: int): void
+    + getHp(): int
+    + shoot(): List<BaseBullet>
     + setShootStrategy(shootStrategy: ShootStrategy): void
     + setShootNum(shootNum: int): void
- }
+    + getShootNum(): int
+    + getPower(): int
+    + getDirection(): int
+}
 AbstractFlyingObject <|-- AbstractAircraft
 
 ' 1. 英雄机 (单例模式)
 class HeroAircraft {
     - {static} instance: HeroAircraft
-    - shootNum:int
-    - power:int
-    - direction:int
 
     ' 构造函数私有化
-    - HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
-    ' 无参获取实例
+    - HeroAircraft(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
+    
+    ' 无参获取实例 (双重检查锁)
     + {static} getInstance(): HeroAircraft
-    + forward():void
+    + reset(x: int, y: int): void
+    + forward(): void
 }
 AbstractAircraft <|-- HeroAircraft
 
-' 2. 抽象敌机
+' 敌机抽象基类
 abstract class AbstractEnemy {
-    + AbstractEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + AbstractEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
     + {abstract} getScore(): int
     + {abstract} dropProps(): List<AbstractProp>
+    + onBombActive(): void
+    # freezeWithRecovery(sleepTimeMs: int): void
 }
 AbstractAircraft <|-- AbstractEnemy
 
+' 具体敌机实现
 class MobEnemy {
-    + MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + forward():void
+    + MobEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
+    + forward(): void
     + getScore(): int
     + dropProps(): List<AbstractProp>
+    + onIceActive(): void
 }
 AbstractEnemy <|-- MobEnemy
 
 class EliteEnemy {
-    + EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + forward():void
+    + EliteEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
+    + forward(): void
     + getScore(): int
     + dropProps(): List<AbstractProp>
+    + onIceActive(): void
 }
 AbstractEnemy <|-- EliteEnemy
 
 class ElitePlusEnemy {
-    + ElitePlusEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + forward():void
+    + ElitePlusEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
     + getScore(): int
     + dropProps(): List<AbstractProp>
+    + onIceActive(): void
 }
 AbstractEnemy <|-- ElitePlusEnemy
 
 class EliteProEnemy {
-    + EliteProEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + forward():void
+    + EliteProEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
+    + forward(): void
     + getScore(): int
     + dropProps(): List<AbstractProp>
+    + onBombActive(): void
+    + onIceActive(): void
 }
 AbstractEnemy <|-- EliteProEnemy
 
 class BossEnemy {
-    + BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + forward():void
+    + BossEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
+    + forward(): void
     + getScore(): int
     + dropProps(): List<AbstractProp>
+    + onBombActive(): void
+    + onIceActive(): void
 }
 AbstractEnemy <|-- BossEnemy
 
-' ==============================
-' 子弹类
-' ==============================
+
+' ================================
+' 子弹派生类群
+' ================================
 abstract class BaseBullet {
-    - power:int
-    + BaseBullet(int locationX, int locationY, int speedX, int speedY, int power)
-    + forward():void
-    + getPower():int
+    - power: int
+    
+    + BaseBullet(locationX: int, locationY: int, speedX: int, speedY: int, power: int)
+    + forward(): void
+    + getPower(): int
 }
 AbstractFlyingObject <|-- BaseBullet
 
 class HeroBullet {
-    + HeroBullet(int locationX, int locationY, int speedX, int speedY, int power)
+    + HeroBullet(locationX: int, locationY: int, speedX: int, speedY: int, power: int)
 }
 BaseBullet <|-- HeroBullet
 
 class EnemyBullet {
-    + EnemyBullet(int locationX, int locationY, int speedX, int speedY, int power)
+    + EnemyBullet(locationX: int, locationY: int, speedX: int, speedY: int, power: int)
+    + onBombActive(): void
+    + onIceActive(): void
 }
 BaseBullet <|-- EnemyBullet
 
 
-' ==============================
-' 道具类
-' ==============================
+' ================================
+' 道具派生类群
+' ================================
 abstract class AbstractProp {
-    + AbstractProp(int locationX, int locationY, int speedX, int speedY)
-    + forward():void
+    + AbstractProp(locationX: int, locationY: int, speedX: int, speedY: int)
+    + forward(): void
     + {abstract} active(heroAircraft: HeroAircraft): void
 }
 AbstractFlyingObject <|-- AbstractProp
 
 class BloodSupply {
-    + BloodSupply(int locationX, int locationY, int speedX, int speedY)
+    + BloodSupply(locationX: int, locationY: int, speedX: int, speedY: int)
     + active(heroAircraft: HeroAircraft): void
 }
 AbstractProp <|-- BloodSupply
 
 class BulletSupply {
-    + BulletSupply(int locationX, int locationY, int speedX, int speedY)
+    + BulletSupply(locationX: int, locationY: int, speedX: int, speedY: int)
     + active(heroAircraft: HeroAircraft): void
 }
 AbstractProp <|-- BulletSupply
 
 class BulletPlusSupply {
-    + BulletPlusSupply(int locationX, int locationY, int speedX, int speedY)
+    + BulletPlusSupply(locationX: int, locationY: int, speedX: int, speedY: int)
     + active(heroAircraft: HeroAircraft): void
 }
 AbstractProp <|-- BulletPlusSupply
 
+' 炸弹道具 (观察目标)
 class BombSupply {
-    + BombSupply(int locationX, int locationY, int speedX, int speedY)
+    - observers: List<PropObserver>
+    
+    + BombSupply(locationX: int, locationY: int, speedX: int, speedY: int)
+    + addObserver(observer: PropObserver): void
+    + notifyObservers(): void
     + active(heroAircraft: HeroAircraft): void
 }
 AbstractProp <|-- BombSupply
 
+' 冰冻道具 (观察目标)
 class FreezeSupply {
-    + FreezeSupply(int locationX, int locationY, int speedX, int speedY)
+    - observers: List<PropObserver>
+    
+    + FreezeSupply(locationX: int, locationY: int, speedX: int, speedY: int)
+    + addObserver(observer: PropObserver): void
+    + notifyObservers(): void
     + active(heroAircraft: HeroAircraft): void
 }
 AbstractProp <|-- FreezeSupply
