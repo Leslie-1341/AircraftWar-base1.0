@@ -13,7 +13,7 @@ public class EliteEnemy extends AbstractEnemy {
         super(locationX, locationY, speedX, speedY, hp);
 
         // ==========================================
-        // 【策略模式修改】：初始化继承自父类的射击属性
+        // 【策略模式】：初始化继承自父类的射击属性
         // ==========================================
         // 每次射击发射子弹数量
         this.shootNum = 1;
@@ -22,7 +22,7 @@ public class EliteEnemy extends AbstractEnemy {
         // 子弹射击方向 (向上发射：-1，向下发射：1)
         this.direction = 1;
 
-        // 【核心操作】：装备直射策略武器
+        // 装备直射策略武器
         this.shootStrategy = new StraightShootStrategy();
     }
 
@@ -35,7 +35,7 @@ public class EliteEnemy extends AbstractEnemy {
 
     @Override
     public int getScore() {
-        return 20; // 精英敌机 20 分
+        return 20; 
     }
 
     @Override
@@ -55,10 +55,9 @@ public class EliteEnemy extends AbstractEnemy {
 
     @Override
     public void onIceActive() {
-        // 精英敌机静止 4s[cite: 2]
+        // 精英敌机静止 4s
         this.freezeWithRecovery(4000);
     }
 
-    // SuperEliteEnemy 同理，只要在它的类里写 this.freezeWithRecovery(3000); 即可[cite: 2]
-    // 炸弹逻辑都不用写，直接继承父类的坠毁。
+    // 炸弹逻辑不用写，直接继承父类的坠毁。
 }

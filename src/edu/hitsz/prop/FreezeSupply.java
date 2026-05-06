@@ -11,14 +11,8 @@ import java.util.List;
  */
 public class FreezeSupply extends AbstractProp {
 
-    private List<PropObserver> observers = new ArrayList<>();
-
     public FreezeSupply(int locationX, int locationY, int speedX, int speedY) {
         super(locationX, locationY, speedX, speedY);
-    }
-
-    public void addObserver(PropObserver observer) {
-        observers.add(observer);
     }
 
     public void notifyObservers() {
@@ -29,7 +23,7 @@ public class FreezeSupply extends AbstractProp {
 
     @Override
     public void active(HeroAircraft heroAircraft) {
-        System.out.println("FreezeSupply active! 寒冰领域展开！");
+        System.out.println("FreezeSupply active! ");
         notifyObservers();
     }
 }

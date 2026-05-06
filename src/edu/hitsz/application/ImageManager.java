@@ -41,22 +41,28 @@ public class ImageManager {
     public static BufferedImage ELITE_ENEMY_IMAGE;
     public static BufferedImage ELITE_PLUS_ENEMY_IMAGE;
     public static BufferedImage ELITE_PRO_ENEMY_IMAGE;
-    public static BufferedImage BOSS_ENEMY_IMAGE; // 新增 Boss 敌机图片声明
+    public static BufferedImage BOSS_ENEMY_IMAGE; 
     public static BufferedImage PROP_BLOOD_IMAGE;
     public static BufferedImage PROP_BULLET_IMAGE;
     public static BufferedImage PROP_BULLET_PLUS_IMAGE;
     public static BufferedImage PROP_BOMB_IMAGE;
     public static BufferedImage PROP_FREEZE_IMAGE;
+    // 定义三种难度的背景图片变量
+    public static BufferedImage BACKGROUND_IMAGE_EASY;
+    public static BufferedImage BACKGROUND_IMAGE_NORMAL;
+    public static BufferedImage BACKGROUND_IMAGE_HARD;
 
     static {
         try {
-            BACKGROUND_IMAGE = loadImage("/images/bg.jpg");
+            BACKGROUND_IMAGE_EASY = loadImage("/images/bg2.jpg");
+            BACKGROUND_IMAGE_NORMAL = loadImage("/images/bg3.jpg");
+            BACKGROUND_IMAGE_HARD = loadImage("/images/bg5.jpg");
             HERO_IMAGE = loadImage("/images/hero.png");
             MOB_ENEMY_IMAGE = loadImage("/images/mob.png");
             ELITE_ENEMY_IMAGE = loadImage("/images/elite.png");
             ELITE_PLUS_ENEMY_IMAGE = loadImage("/images/elitePlus.png");
             ELITE_PRO_ENEMY_IMAGE = loadImage("/images/elitePro.png");
-            BOSS_ENEMY_IMAGE = loadImage("/images/boss.png"); // 加载 Boss 敌机图片
+            BOSS_ENEMY_IMAGE = loadImage("/images/boss.png"); 
             HERO_BULLET_IMAGE = loadImage("/images/bullet_hero.png");
             ENEMY_BULLET_IMAGE = loadImage("/images/bullet_enemy.png");
             PROP_BLOOD_IMAGE = loadImage("/images/prop_blood.png");

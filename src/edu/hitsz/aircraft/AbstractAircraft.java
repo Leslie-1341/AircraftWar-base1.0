@@ -25,7 +25,7 @@ public abstract class AbstractAircraft extends AbstractFlyingObject {
     protected int direction = 1; // 默认射击方向 (1向下，-1向上)
 
     // ==========================================
-    // 维护一个策略接口的引用 (Context 聚合 Strategy)
+    // 维护策略接口的引用 (Context 聚合 Strategy)
     // ==========================================
     protected ShootStrategy shootStrategy;
 
@@ -45,7 +45,7 @@ public abstract class AbstractAircraft extends AbstractFlyingObject {
     }
 
     // ==========================================
-    // 【新增】：利用自带的 maxHp 属性进行动态上限限制
+    // 利用自带的 maxHp 属性进行动态上限限制
     // ==========================================
     public void increaseHp(int increase) {
         hp += increase;
@@ -60,7 +60,7 @@ public abstract class AbstractAircraft extends AbstractFlyingObject {
     }
 
     // ==========================================
-    // 【新增】提供动态设置/切换策略的方法
+    // 供动态设置/切换策略的方法
     // ==========================================
     public void setShootStrategy(ShootStrategy shootStrategy) {
         this.shootStrategy = shootStrategy;
@@ -68,7 +68,7 @@ public abstract class AbstractAircraft extends AbstractFlyingObject {
 
     /**
      * 飞机射击方法
-     * 【核心修改】：移除 abstract 关键字，改为委托给策略类执行
+     * 移除 abstract 关键字，改为委托给策略类执行
      * @return 子弹列表
      */
     public List<BaseBullet> shoot() {
@@ -81,7 +81,7 @@ public abstract class AbstractAircraft extends AbstractFlyingObject {
     }
 
     // ==========================================
-    // 【新增 4】为外部策略类提供获取自身状态的接口
+    // 为外部策略类提供获取自身状态的接口
     // ==========================================
     public int getShootNum() {
         return shootNum;

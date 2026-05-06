@@ -26,11 +26,11 @@ public abstract class AbstractEnemy extends AbstractAircraft implements PropObse
 
     /**
      * 默认的炸弹响应：绝大多数敌机（普通、精英、精锐）遭到炸弹攻击直接坠毁
-     * 子类（如 Boss、王牌）可重写此方法以实现特殊响应
+     * 子类（Boss、王牌）可重写此方法以实现特殊响应
      */
     @Override
     public void onBombActive() {
-        System.out.println(this.getClass().getSimpleName() + " 遭到炸弹攻击，直接坠毁！");
+        System.out.println(this.getClass().getSimpleName() + " 遭到炸弹攻击，敌机坠毁！");
         this.vanish(); // 标记为无效，等待后续清理
     }
 
@@ -66,6 +66,5 @@ public abstract class AbstractEnemy extends AbstractAircraft implements PropObse
     }
 
     // 注意：onIceActive() 方法不需要在这里提供默认实现，
-    // 因为每种敌机的冰冻响应几乎都不一样
-    // 强制要求具体的敌机子类去实现 onIceActive()
+    // 每种敌机的冰冻响应几乎都不一样，强制要求具体的敌机子类去实现 onIceActive()
 }

@@ -20,7 +20,7 @@ public class BossEnemy extends AbstractEnemy {
         this.power = 10;     // 子弹伤害
         this.direction = 1;  // 向下射击
 
-        // 装备环射弹道策略！
+        // 装备环射弹道策略
         this.shootStrategy = new RingShootStrategy();
     }
 
@@ -31,22 +31,22 @@ public class BossEnemy extends AbstractEnemy {
         // 【Boss敌机移动逻辑】：悬浮于界面上方，仅左右移动，不向下移动
         // 触壁反弹
         if (locationX <= 0) {
-            speedX = Math.abs(speedX); // 撞左墙，向右飞
+            speedX = Math.abs(speedX); 
         } else if (locationX >= Main.WINDOW_WIDTH - 60) {
-            speedX = -Math.abs(speedX); // 撞右墙，向左飞
+            speedX = -Math.abs(speedX); 
         }
     }
 
     @Override
     public int getScore() {
-        return 100; // 击毁 Boss 得 100 分 (分值可自定义)
+        return 100; // 击毁 Boss 得 100 分 
     }
 
     @Override
     public List<AbstractProp> dropProps() {
         List<AbstractProp> res = new LinkedList<>();
 
-        // 【Boss敌机掉落道具】：必定掉落 3 个道具，采用最新设计的差异化掉落概率
+        // 【Boss敌机掉落道具】：必定掉落 3 个道具，采用差异化掉落概率
         for (int i = 0; i < 3; i++) {
 
             // 生成一个 0.0 到 1.0 之间的随机数
@@ -54,10 +54,10 @@ public class BossEnemy extends AbstractEnemy {
             String selectedType;
 
             // 【区间划分法确定掉落哪种道具】
-            if (prob < 0.3) {
-                selectedType = "Blood";       // 30% 概率掉落加血
+            if (prob < 0.4) {
+                selectedType = "Blood";       // 40% 概率掉落加血
             } else if (prob < 0.6) {
-                selectedType = "Bullet";      // 30% 概率掉落火力
+                selectedType = "Bullet";      // 20% 概率掉落火力
             } else if (prob < 0.8) {
                 selectedType = "Bomb";        // 20% 概率掉落炸弹
             } else if (prob < 0.9) {
@@ -66,7 +66,7 @@ public class BossEnemy extends AbstractEnemy {
                 selectedType = "BulletPlus";  // 10% 概率掉落超级火力
             }
 
-            // 给 3 个道具的 x 坐标加上 (-30, 0, 30) 的横向偏移量，使其散开不完全重叠
+            // 给 3 个道具的 x 坐标加上横向偏移量，使其散开不完全重叠
             int dropX = this.getLocationX() + (i - 1) * 30;
 
             AbstractProp prop = PropFactory.createProp(selectedType, dropX, this.getLocationY(), 0, 5);
@@ -79,13 +79,13 @@ public class BossEnemy extends AbstractEnemy {
 
     @Override
     public void onBombActive() {
-        // Boss 敌机不受影响[cite: 2]
+        // Boss 敌机不受影响
         System.out.println("Boss 无视了炸弹的冲击波！");
     }
 
     @Override
     public void onIceActive() {
-        // Boss 敌机不受影响[cite: 2]
+        // Boss 敌机不受影响
         System.out.println("Boss 无视了冰冻效果！");
     }
 }

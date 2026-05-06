@@ -13,16 +13,16 @@ public class EliteProEnemy extends AbstractEnemy {
         super(locationX, locationY, speedX, speedY, hp);
 
         // ==========================================
-        // 【策略模式修改】：初始化继承自父类的射击属性
+        // 【策略模式】：初始化继承自父类的射击属性
         // ==========================================
-        // 每次射击发射子弹数量 (王牌敌机为3发扇形散射)
+        // 每次射击发射子弹数量 (3发扇形散射)
         this.shootNum = 3;
         // 子弹威力
-        this.power = 30; // 伤害更高
+        this.power = 30; 
         // 子弹射击方向
         this.direction = 1;
 
-        // 【核心操作】：装备散射策略
+        // 装备散射策略
         this.shootStrategy = new ScatterShootStrategy();
     }
 
@@ -30,11 +30,11 @@ public class EliteProEnemy extends AbstractEnemy {
     public void forward() {
         super.forward();
 
-        // 【核心修复】：解决边缘抖动和飞出边界的问题
+        // 解决边缘抖动和飞出边界的问题
         if (locationX <= 0) {
-            speedX = Math.abs(speedX); // 强制向右飞
+            speedX = Math.abs(speedX); 
         } else if (locationX >= Main.WINDOW_WIDTH - 60) {
-            speedX = -Math.abs(speedX); // 强制向左飞
+            speedX = -Math.abs(speedX); 
         }
 
         // 向下飞出屏幕边界后回收名额
@@ -45,19 +45,19 @@ public class EliteProEnemy extends AbstractEnemy {
 
     @Override
     public int getScore() {
-        return 50; // 王牌敌机 50 分
+        return 50; 
     }
 
     @Override
     public List<AbstractProp> dropProps() {
         List<AbstractProp> res = new LinkedList<>();
 
-        // 牌敌机有 50% 的概率决定是否掉落道具
+        // 50% 的概率决定是否掉落道具
         if (Math.random() < 0.5) {
             double prob = Math.random();
             String selectedType;
 
-            if (prob < 0.3) {
+            if (prob < 0.4) {
                 selectedType = "Blood";
             } else if (prob < 0.6) {
                 selectedType = "Bullet";
@@ -76,15 +76,14 @@ public class EliteProEnemy extends AbstractEnemy {
 
     @Override
     public void onBombActive() {
-        // 炸弹对其只是掉血，不直接坠毁
         System.out.println("王牌敌机遭到炸弹攻击，扣除 50 点血量！");
-        this.decreaseHp(50); // 具体扣多少血你可以自己设定
+        this.decreaseHp(50); 
     }
 
     @Override
     public void onIceActive() {
-        System.out.println("王牌敌机抵抗了严寒，仅仅被减速 5 秒！");
-        // 减速 5s 后恢复[cite: 2]
+        System.out.println("王牌敌机抵抗了严寒，被减速 5 秒！");
+        // 减速 5s 后恢复
         Runnable r = () -> {
             int originalSpeedY = this.getSpeedY();
             // 速度减半

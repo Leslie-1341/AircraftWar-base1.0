@@ -12,7 +12,6 @@ import edu.hitsz.prop.*;
 import edu.hitsz.record.Record;
 import edu.hitsz.record.RecordDao;
 import edu.hitsz.record.RecordDaoImpl;
-import edu.hitsz.strategy.StraightShootStrategy;
 import edu.hitsz.view.LeaderboardTable;
 
 import javax.swing.*;
@@ -53,9 +52,6 @@ public abstract class AbstractGame extends JPanel{
     //当前玩家分数
     private int score = 0;
 
-    //游戏结束标志
-    private boolean gameOverFlag = false;
-
     // ==========================================
     // Boss 敌机生成控制机制
     // ==========================================
@@ -78,6 +74,9 @@ public abstract class AbstractGame extends JPanel{
     protected int bossThreshold;      // Boss 产生的分数阈值
     protected int bossHp;             // Boss 当前血量
     protected int timeCount = 0;      // 记录游戏经过的时间（用于难度递增）
+
+    // 增加一个 protected 的背景图片成员变量，供子类赋值
+    protected BufferedImage backgroundImage;
 
     public AbstractGame(String difficulty, boolean musicEnabled) {
         //使用单例模式改进代码，把对象的使用和创建分离
@@ -124,19 +123,25 @@ public abstract class AbstractGame extends JPanel{
     protected abstract void adjustBossHp();
 
     /**
+     * 钩子 4：生成普通敌机工厂（具体生成概率和种类由各难度子类决定）
+     */
+    protected abstract EnemyFactory createEnemyFactory();
+    
+    /**
      * 游戏启动入口，执行游戏逻辑
      */
-    public void action() {
-        // 如果开启了音效，启动背景音乐线程
-        if (musicEnabled) {
-            bgmThread = new MusicThread("src/videos/bgm.wav", true);
-            bgmThread.start();
-        }
+/**
+     * 游戏启动入口，执行游戏逻辑
+     */
+    public final void action() {
+        // 将底层音频调用提取出去，通过统一接口/方法控制
+        playBackgroundMusic();
+
         // 定时任务：绘制、对象产生、碰撞判定、及结束判定
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                // ：每次循环累计时间
+                // 每次循环累计时间
                 timeCount += timeInterval;
 
                 // ==========================================
@@ -153,7 +158,7 @@ public abstract class AbstractGame extends JPanel{
                     if (score >= lastBossScore + bossThreshold) {
 
                         // ==========================================
-                        // 【模板模式：调用钩子 2 & 3】Boss 生成逻辑
+                        // 【模板模式：调用钩子2、3】Boss 生成逻辑
                         // ==========================================
                         if (supportBoss() && !hasBoss) {
                             // 调用钩子调整血量
@@ -168,21 +173,14 @@ public abstract class AbstractGame extends JPanel{
                             System.out.println("警告：分数达到 " + score + "，Boss 敌机降临！血量: " + bossHp);
                         }
                     } else {
-                        // 普通、精英、精锐、王牌敌机随机生成逻辑 (保持你原有的逻辑不变)
-                        EnemyFactory enemyFactory;
-                        double randomValue = Math.random();
-                        if (randomValue < 0.10) {
-                            enemyFactory = new EliteProFactory();
-                        } else if (randomValue < 0.25) {
-                            enemyFactory = new ElitePlusFactory();
-                        } else if (randomValue < 0.50) {
-                            enemyFactory = new EliteFactory();
-                        } else {
-                            enemyFactory = new MobFactory();
+                        // 使用多态钩子方法获取具体敌机工厂
+                        EnemyFactory enemyFactory = createEnemyFactory();
+                        if (enemyFactory != null) {
+                            enemyAircrafts.add(enemyFactory.createEnemy());
                         }
-                        enemyAircrafts.add(enemyFactory.createEnemy());
-                    }
-                }
+                    } 
+                } 
+
                 // 飞机发射子弹
                 shootAction();
                 // 子弹移动
@@ -202,8 +200,7 @@ public abstract class AbstractGame extends JPanel{
             }
         };
         // 以固定延迟时间进行执行：本次任务执行完成后，延迟 timeInterval 再执行下一次
-        timer.schedule(task,0,timeInterval);
-
+        timer.schedule(task, 0, timeInterval);
     }
 
     //***********************
@@ -237,7 +234,7 @@ public abstract class AbstractGame extends JPanel{
             enemyAircraft.forward();
         }
     }
-    // 完整的道具移动方法
+
     private void propsMoveAction() {
         for (AbstractProp prop : props) {
             prop.forward();
@@ -250,8 +247,8 @@ public abstract class AbstractGame extends JPanel{
      * 2. 英雄攻击/撞击敌机
      * 3. 英雄获得补给
      */
-    // 敌机子弹攻击英雄机（第二次实验课已完成）
-    // 多态，提供统一接口，对于不同类型的敌机，返回对应的击毁分数和道具掉落概率（第二次实验课已完成）
+    // 敌机子弹攻击英雄机
+    // 多态，提供统一接口，对于不同类型的敌机，返回对应的击毁分数和道具掉落概率
 
     // ===============================================
     // 1. 英雄子弹攻击敌机
@@ -285,7 +282,6 @@ public abstract class AbstractGame extends JPanel{
 
                         enemyAircraft.vanish();  // 标记敌机为无效
 
-                        // 【多态重构】：删除 instanceof
                         // 1. 获取这架敌机专属的分数
                         score += enemyAircraft.getScore();
 
@@ -329,51 +325,21 @@ public abstract class AbstractGame extends JPanel{
             if (heroAircraft.crash(prop)) {
 
                 // ==========================================
-                // 【：观察者模式注册逻辑】
-                // 在道具生效前，将当前屏幕上的敌机和敌方子弹全部注册为观察者
+                // 【观察者模式优化】
+                // 消除 instanceof，依赖多态，统一将屏幕上的敌机和子弹注册为观察者。
+                // （加血/火力道具在 active 时不调用 notify 即可，无影响）
                 // ==========================================
-                if (prop instanceof BombSupply) {
-                    BombSupply bomb = (BombSupply) prop;
-                    for (AbstractEnemy enemy : enemyAircrafts) {
-                        bomb.addObserver((PropObserver) enemy);
-                    }
-                    for (BaseBullet bullet : enemyBullets) {
-                        bomb.addObserver((PropObserver) bullet);
-                    }
-                } else if (prop instanceof FreezeSupply) {
-                    FreezeSupply freeze = (FreezeSupply) prop;
-                    for (AbstractEnemy enemy : enemyAircrafts) {
-                        freeze.addObserver((PropObserver) enemy);
-                    }
-                    for (BaseBullet bullet : enemyBullets) {
-                        freeze.addObserver((PropObserver) bullet);
-                    }
+                for (AbstractEnemy enemy : enemyAircrafts) {
+                    prop.addObserver((PropObserver) enemy);
+                }
+                for (BaseBullet bullet : enemyBullets) {
+                    prop.addObserver((PropObserver) bullet);
                 }
 
-                // 1. 调用道具生效方法（炸弹和冰冻会在这里内部调用 notifyObservers）
+                // 1. 调用道具生效方法（炸弹和冰冻内部调用 notifyObservers）
                 prop.active(heroAircraft);
 
-                // ==========================================
-                // 【：实验五多线程限时火力恢复逻辑】
-                // ==========================================
-                // 如果吃到的是火力补给或超级火力补给，开启一个新线程负责计时
-                if (prop instanceof BulletSupply || prop instanceof BulletPlusSupply) {
-                    Runnable r = () -> {
-                        try {
-                            // 计时 5 秒
-                            Thread.sleep(5000);
-                            // 5秒后，将英雄机的射击策略恢复为初始的直射
-                            heroAircraft.setShootStrategy(new StraightShootStrategy());
-                            System.out.println("火力道具已过期，恢复初始射击状态");
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    };
-                    // 启动这个负责倒计时的后台线程
-                    new Thread(r).start();
-                }
-
-                // 道具被吸收后，标记为失效并消失
+                // 2. 道具被吸收后，标记为失效并消失
                 prop.vanish();
             }
         }
@@ -389,7 +355,7 @@ public abstract class AbstractGame extends JPanel{
         enemyBullets.removeIf(AbstractFlyingObject::notValid);
         heroBullets.removeIf(AbstractFlyingObject::notValid);
         enemyAircrafts.removeIf(AbstractFlyingObject::notValid);
-        // 删除无效道具（第三次实验课已完成）
+        // 删除无效道具
         props.removeIf(AbstractFlyingObject::notValid);
     }
 
@@ -401,25 +367,17 @@ public abstract class AbstractGame extends JPanel{
         if (heroAircraft.getHp() <= 0) {
             // 1. 终止游戏主循环定时器
             timer.cancel();
-            gameOverFlag = true;
             System.out.println("Game Over!");
 
-            // ==========================================
-            // 【实验五：多线程音效控制】
-            // ==========================================
-            // 如果开启了音效，游戏结束时必须停止背景音乐线程
-            if (musicEnabled && bgmThread != null) {
-                bgmThread.stopMusic();
-            }
+            // =================================
+            // 【多线程音效控制】
+            // =================================
+            stopBackgroundMusic();
+            playGameOverMusic();
 
-            // 可选：播放游戏结束的单次音效 (不循环)
-            if (musicEnabled) {
-                new MusicThread("src/videos/game_over.wav", false).start();
-            }
-
-            // ==========================================
+            // ==================================
             // 【数据持久化：DAO 模式】
-            // ==========================================
+            // ==================================
             // 1. 弹窗提示玩家输入名字
             String userName = JOptionPane.showInputDialog(
                     null,
@@ -467,20 +425,19 @@ public abstract class AbstractGame extends JPanel{
         super.paint(g);
 
         // 绘制背景,图片滚动
-        g.drawImage(ImageManager.BACKGROUND_IMAGE, 0, this.backGroundTop - Main.WINDOW_HEIGHT, null);
-        g.drawImage(ImageManager.BACKGROUND_IMAGE, 0, this.backGroundTop, null);
+        g.drawImage(backgroundImage, 0, this.backGroundTop - Main.WINDOW_HEIGHT, null);
+        g.drawImage(backgroundImage, 0, this.backGroundTop, null);
         this.backGroundTop += 1;
         if (this.backGroundTop == Main.WINDOW_HEIGHT) {
             this.backGroundTop = 0;
         }
 
         // 先绘制子弹，后绘制飞机
-        // 这样子弹显示在飞机的下层
         paintImageWithPositionRevised(g, enemyBullets);
         paintImageWithPositionRevised(g, heroBullets);
         paintImageWithPositionRevised(g, enemyAircrafts);
 
-        // 绘制道具（第二次实验课已完成）
+        // 绘制道具
         paintImageWithPositionRevised(g, props);
 
         g.drawImage(ImageManager.HERO_IMAGE, heroAircraft.getLocationX() - ImageManager.HERO_IMAGE.getWidth() / 2,
@@ -512,6 +469,29 @@ public abstract class AbstractGame extends JPanel{
         g.drawString("SCORE: " + this.score, x, y);
         y = y + 20;
         g.drawString("LIFE: " + this.heroAircraft.getHp(), x, y);
+    }
+
+    //***********************
+    //      Music 各部分
+    //***********************    
+    // 将散落的底层音频逻辑统一封装，隔离业务主流程
+    private void playBackgroundMusic() {
+        if (musicEnabled) {
+            bgmThread = new MusicThread("src/videos/bgm.wav", true);
+            bgmThread.start();
+        }
+    }
+
+    private void stopBackgroundMusic() {
+        if (musicEnabled && bgmThread != null) {
+            bgmThread.stopMusic();
+        }
+    }
+
+    private void playGameOverMusic() {
+        if (musicEnabled) {
+            new MusicThread("src/videos/game_over.wav", false).start();
+        }
     }
 
 }
