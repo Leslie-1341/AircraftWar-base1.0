@@ -16,16 +16,16 @@ public abstract class AbstractAircraft extends AbstractFlyingObject {
     //最大生命值
     protected int maxHp;
     protected int hp;
-    //传参给shoot方法（参数列表不要超过4个）
+    //传参给shoot方法（参数列表不超过4个）
     // ==========================================
-    // 【新增 1】将射击属性统一上提至父类
+    // 将射击属性统一上提至父类
     // ==========================================
     protected int shootNum = 1;  // 默认发弹数量
     protected int power = 10;    // 默认子弹威力
     protected int direction = 1; // 默认射击方向 (1向下，-1向上)
 
     // ==========================================
-    // 【新增 2】维护一个策略接口的引用 (Context 聚合 Strategy)
+    // 维护一个策略接口的引用 (Context 聚合 Strategy)
     // ==========================================
     protected ShootStrategy shootStrategy;
 
@@ -95,7 +95,7 @@ public abstract class AbstractAircraft extends AbstractFlyingObject {
         return direction;
     }
     // ==========================================
-    // 【新增】：提供修改子弹数量的方法，供道具生效时调用
+    // 提供修改子弹数量的方法，供道具生效时调用
     // ==========================================
     public void setShootNum(int shootNum) {
         this.shootNum = shootNum;

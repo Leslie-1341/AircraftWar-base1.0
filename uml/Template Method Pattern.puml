@@ -1,0 +1,67 @@
+@startuml
+title 游戏难度控制模板模式结构图 (Template Method Pattern)
+
+' ===================
+' 【排版优化】
+' ===================
+skinparam nodesep 40
+skinparam ranksep 60
+
+' =====================================
+' 1. 抽象类 (AbstractClass)
+' =====================================
+abstract class AbstractGame {
+    ' 难度相关的基础属性
+    # enemyMaxNumber: int
+    # enemySpawnCycle: int
+    # bossThreshold: int
+    # bossHp: int
+    # timeCount: int
+
+    ' 模板方法：定义了游戏主循环的基础骨架，内部调用了钩子方法
+    + action(): void
+
+    ' 抽象方法/钩子方法：交由具体难度子类实现
+    # {abstract} levelUpLogic(): void
+    # {abstract} supportBoss(): boolean
+    # {abstract} adjustBossHp(): void
+}
+
+' =====================================
+' 2. 具体类 (ConcreteClasses)
+' =====================================
+together {
+    class EasyGame {
+        + EasyGame(difficulty: String, musicEnabled: boolean)
+        # levelUpLogic(): void
+        # supportBoss(): boolean
+        # adjustBossHp(): void
+    }
+
+    class MediumGame {
+        + MediumGame(difficulty: String, musicEnabled: boolean)
+        # levelUpLogic(): void
+        # supportBoss(): boolean
+        # adjustBossHp(): void
+    }
+
+    class HardGame {
+        + HardGame(difficulty: String, musicEnabled: boolean)
+        # levelUpLogic(): void
+        # supportBoss(): boolean
+        # adjustBossHp(): void
+    }
+}
+
+' 优化布局
+EasyGame -[hidden]right- MediumGame
+MediumGame -[hidden]right- HardGame
+
+' =====================================
+' 继承关系
+' =====================================
+EasyGame -up-|> AbstractGame
+MediumGame -up-|> AbstractGame
+HardGame -up-|> AbstractGame
+
+@enduml

@@ -1,73 +1,90 @@
 @startuml
 title 道具生效观察者模式 (Observer Pattern)
 
+skinparam nodesep 50
+skinparam ranksep 60
+
+' ================
 ' 1. 抽象观察者接口
+' ================
 interface PropObserver <<interface>> {
+    + {abstract} onBombActive(): void
+    + {abstract} onIceActive(): void
+}
+
+' =============
+' 2. 观察者实现层
+' =============
+abstract class AbstractEnemy {
+    ' 父类实现统一的炸弹响应逻辑
+    + onBombActive(): void
+}
+AbstractEnemy .up.|> PropObserver
+
+class MobEnemy {
+    + onIceActive(): void
+}
+class EliteEnemy {
+    + onIceActive(): void
+}
+class ElitePlusEnemy {
+    + onIceActive(): void
+}
+class EliteProEnemy {
+    + onBombActive(): void
+    + onIceActive(): void
+}
+class BossEnemy {
+    + onBombActive(): void
+    + onIceActive(): void
+}
+class EnemyBullet {
     + onBombActive(): void
     + onIceActive(): void
 }
 
-' 2. 具体观察者实现
-class MobEnemy implements PropObserver {
-    + onBombActive(): void
-    + onIceActive(): void
-}
+MobEnemy -up-|> AbstractEnemy
+EliteEnemy -up-|> AbstractEnemy
+ElitePlusEnemy -up-|> AbstractEnemy
+EliteProEnemy -up-|> AbstractEnemy
+BossEnemy -up-|> AbstractEnemy
 
-class EliteEnemy implements PropObserver {
-    + onBombActive(): void
-    + onIceActive(): void
-}
+' 子弹不继承飞机，直接实现接口
+EnemyBullet .up.|> PropObserver
 
-class SuperEliteEnemy implements PropObserver {
-    + onBombActive(): void
-    + onIceActive(): void
-}
-
-class AceEnemy implements PropObserver {
-    + onBombActive(): void
-    + onIceActive(): void
-}
-
-class BossEnemy implements PropObserver {
-    + onBombActive(): void
-    + onIceActive(): void
-}
-
-class EnemyBullet implements PropObserver {
-    + onBombActive(): void
-    + onIceActive(): void
-}
-
+' =============
 ' 3. 抽象观察目标
+' =============
 abstract class PropSubject {
     # observers: List<PropObserver>
     + addObserver(observer: PropObserver): void
     + removeObserver(observer: PropObserver): void
-    + notifyObservers(): void
+    + {abstract} notifyObservers(): void
 }
 
-' 4. 具体观察目标
-class BombSupply extends PropSubject {
+' =============
+' 4. 具体观察目标 
+' =============
+class BombSupply {
+    - observers: List<PropObserver>
+    + BombSupply(locationX: int, locationY: int, speedX: int, speedY: int)
+    + addObserver(observer: PropObserver): void
     + notifyObservers(): void
-    + activate(): void
+    + active(heroAircraft: HeroAircraft): void
 }
 
-class IceSupply extends PropSubject {
+class FreezeSupply {
+    - observers: List<PropObserver>
+    + FreezeSupply(locationX: int, locationY: int, speedX: int, speedY: int)
+    + addObserver(observer: PropObserver): void
     + notifyObservers(): void
-    + activate(): void
+    + active(heroAircraft: HeroAircraft): void
 }
 
+' ==========
 ' 5. 依赖关系
-PropSubject o--> PropObserver : "通知"
-
-' 布局调整 (可选，为了让图更好看)
-PropSubject -[hidden]right-> PropObserver
-BombSupply -[hidden]right-> IceSupply
-MobEnemy -[hidden]right-> EliteEnemy
-
-'note right of PropSubject::notifyObservers
-'  遍历 observers 列表，
-'  调用相应的方法通知它们
-'end note
-
+' ==========
+PropSubject o-right-> PropObserver 
+BombSupply o--> PropObserver 
+FreezeSupply o--> PropObserver 
 @enduml

@@ -25,8 +25,8 @@ public abstract class AbstractEnemy extends AbstractAircraft implements PropObse
     // ==========================================
 
     /**
-     * 默认的炸弹响应：绝大多数敌机（普通、精英、精锐）遭到炸弹攻击直接坠毁[cite: 2]
-     * 子类（如 Boss、王牌）可重写此方法以实现特殊响应[cite: 2]
+     * 默认的炸弹响应：绝大多数敌机（普通、精英、精锐）遭到炸弹攻击直接坠毁
+     * 子类（如 Boss、王牌）可重写此方法以实现特殊响应
      */
     @Override
     public void onBombActive() {
@@ -36,7 +36,7 @@ public abstract class AbstractEnemy extends AbstractAircraft implements PropObse
 
     /**
      * 通用的冰冻恢复机制（多线程）
-     * 由于不同敌机冰冻时间不同[cite: 2]，在父类中提供此模板方法供子类调用
+     * 由于不同敌机冰冻时间不同，在父类中提供此模板方法供子类调用
      *
      * @param sleepTimeMs 冰冻时间（毫秒）
      */
@@ -55,7 +55,7 @@ public abstract class AbstractEnemy extends AbstractAircraft implements PropObse
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            // 4. 恢复原速度 (前提是这架飞机还没死)
+            // 4. 恢复原速度 
             if (!this.notValid()) {
                 this.setSpeedY(originalSpeedY);
                 this.setSpeedX(originalSpeedX);
@@ -66,7 +66,6 @@ public abstract class AbstractEnemy extends AbstractAircraft implements PropObse
     }
 
     // 注意：onIceActive() 方法不需要在这里提供默认实现，
-    // 因为每种敌机的冰冻响应几乎都不一样[cite: 2]，
-    // 我们强制要求具体的敌机子类去实现 onIceActive()
-    // 或者你可以提供一个空的默认实现 public void onIceActive() {}，然后子类去重写
+    // 因为每种敌机的冰冻响应几乎都不一样
+    // 强制要求具体的敌机子类去实现 onIceActive()
 }

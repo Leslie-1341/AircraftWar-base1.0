@@ -1,99 +1,142 @@
 @startuml
-'https://plantuml.com/class-diagram
 title 敌机工厂方法模式结构图 (Factory Method Pattern)
 
-' ==========================================
-' 【排版优化指令】
-' ==========================================
-' 使用正交线条（直角折线），消除杂乱的斜线
-skinparam linetype ortho
-skinparam nodesep 60
-skinparam ranksep 80
+' ===================
+' 【排版优化】
+' ===================
+skinparam nodesep 20
+skinparam ranksep 60
+skinparam classAttributeIconSize 0
 
-' ==========================================
+' ===================
 ' 客户端 (Client)
-' ==========================================
-class Game {
-    - enemyAircrafts: List<AbstractEnemy>
+' ===================
+class AbstractGame {
+    # enemyAircrafts: List<AbstractEnemy>
     + action(): void
 }
 
-' ==========================================
+' =====================================
 ' 抽象层 (Interfaces & Abstract Classes)
-' ==========================================
+' =====================================
 interface EnemyFactory <<interface>> {
     + {abstract} createEnemy(): AbstractEnemy
 }
 
 abstract class AbstractEnemy {
-    + AbstractEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + forward(): void
-    + {abstract} shoot(): List<BaseBullet>
+    + AbstractEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
     + {abstract} getScore(): int
     + {abstract} dropProps(): List<AbstractProp>
+    + onBombActive(): void
+    # freezeWithRecovery(sleepTimeMs: int): void
 }
 
 ' 客户端依赖抽象层
-Game ..> EnemyFactory
-Game ..> AbstractEnemy
+AbstractGame ..> EnemyFactory
+AbstractGame ..> AbstractEnemy
 
-' ==========================================
+' 强制让两个抽象父类在同一水平高度
+EnemyFactory -[hidden]right- AbstractEnemy
+
+' =====================================
 ' 具体工厂层 (Concrete Factories)
-' ==========================================
-class MobFactory {
-    + createEnemy(): AbstractEnemy
-}
-class EliteFactory {
-    + createEnemy(): AbstractEnemy
-}
-class ElitePlusFactory {
-    + createEnemy(): AbstractEnemy
-}
-class BossFactory {
-    + createEnemy(): AbstractEnemy
+' =====================================
+together {
+    class MobFactory {
+        + createEnemy(): AbstractEnemy
+    }
+    class EliteFactory {
+        + createEnemy(): AbstractEnemy
+    }
+    class ElitePlusFactory {
+        + createEnemy(): AbstractEnemy
+    }
+    class EliteProFactory {
+        + createEnemy(): AbstractEnemy
+    }
+    class BossFactory {
+        + createEnemy(): AbstractEnemy
+    }
 }
 
+' 使用隐形线强制工厂类从左到右水平对齐排列
+MobFactory -[hidden]right- EliteFactory
+EliteFactory -[hidden]right- ElitePlusFactory
+ElitePlusFactory -[hidden]right- EliteProFactory
+EliteProFactory -[hidden]right- BossFactory
+
+' =====================================
+' 具体产品层 (Concrete Products)
+' =====================================
+together {
+    class MobEnemy {
+        + MobEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
+        + forward(): void
+        + getScore(): int
+        + dropProps(): List<AbstractProp>
+        + onIceActive(): void
+    }
+    class EliteEnemy {
+        + EliteEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
+        + forward(): void
+        + getScore(): int
+        + dropProps(): List<AbstractProp>
+        + onIceActive(): void
+    }
+    class ElitePlusEnemy {
+        + ElitePlusEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
+        + forward(): void
+        + getScore(): int
+        + dropProps(): List<AbstractProp>
+        + onIceActive(): void
+    }
+    class EliteProEnemy {
+        + EliteProEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
+        + forward(): void
+        + getScore(): int
+        + dropProps(): List<AbstractProp>
+        + onBombActive(): void
+        + onIceActive(): void
+    }
+    class BossEnemy {
+        + BossEnemy(locationX: int, locationY: int, speedX: int, speedY: int, hp: int)
+        + forward(): void
+        + getScore(): int
+        + dropProps(): List<AbstractProp>
+        + onBombActive(): void
+        + onIceActive(): void
+    }
+}
+
+' 使用隐形线强制产品类从左到右水平对齐排列，与工厂相呼应
+MobEnemy -[hidden]right- EliteEnemy
+EliteEnemy -[hidden]right- ElitePlusEnemy
+ElitePlusEnemy -[hidden]right- EliteProEnemy
+EliteProEnemy -[hidden]right- BossEnemy
+
+' =====================================
+' 继承与实现关系
+' =====================================
 MobFactory .up.|> EnemyFactory
 EliteFactory .up.|> EnemyFactory
 ElitePlusFactory .up.|> EnemyFactory
+EliteProFactory .up.|> EnemyFactory
 BossFactory .up.|> EnemyFactory
-
-' ==========================================
-' 具体产品层 (Concrete Products)
-' ==========================================
-class MobEnemy {
-    + MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + getScore(): int
-    + dropProps(): List<AbstractProp>
-}
-class EliteEnemy {
-    + EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + getScore(): int
-    + dropProps(): List<AbstractProp>
-}
-class ElitePlusEnemy {
-    + ElitePlusEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + getScore(): int
-    + dropProps(): List<AbstractProp>
-}
-class BossEnemy {
-    + BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + getScore(): int
-    + dropProps(): List<AbstractProp>
-}
 
 MobEnemy -up-|> AbstractEnemy
 EliteEnemy -up-|> AbstractEnemy
 ElitePlusEnemy -up-|> AbstractEnemy
+EliteProEnemy -up-|> AbstractEnemy
 BossEnemy -up-|> AbstractEnemy
 
-' ==========================================
+' =====================================
 ' 生产依赖关系 (Creates)
-' ==========================================
-' 工厂与对应产品建立虚线连接
-MobFactory ..> MobEnemy : creates
-EliteFactory ..> EliteEnemy : creates
-ElitePlusFactory ..> ElitePlusEnemy : creates
-BossFactory ..> BossEnemy : creates
+' =====================================
+' 限定依赖方向为向下，使连线更清晰
+MobFactory .down.> MobEnemy : creates
+EliteFactory .down.> EliteEnemy : creates
+ElitePlusFactory .down.> ElitePlusEnemy : creates
+EliteProFactory .down.> EliteProEnemy : creates
+BossFactory .down.> BossEnemy : creates
 
 @enduml

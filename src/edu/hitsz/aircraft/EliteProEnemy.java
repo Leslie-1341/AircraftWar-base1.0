@@ -76,7 +76,7 @@ public class EliteProEnemy extends AbstractEnemy {
 
     @Override
     public void onBombActive() {
-        // 炸弹对其只是掉血，不直接坠毁[cite: 2]
+        // 炸弹对其只是掉血，不直接坠毁
         System.out.println("王牌敌机遭到炸弹攻击，扣除 50 点血量！");
         this.decreaseHp(50); // 具体扣多少血你可以自己设定
     }

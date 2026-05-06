@@ -48,16 +48,6 @@ public class ElitePlusEnemy extends AbstractEnemy {
         return 30; // 精锐敌机 30 分
     }
 
-//    @Override
-//    public List<AbstractProp> dropProps() {
-//        List<AbstractProp> res = new LinkedList<>();
-//        if (Math.random() < 0.5) {
-//            String[] propTypes = {"Blood", "Bullet", "BulletPlus", "Bomb"}; // 4种道具
-//            String selectedType = propTypes[(int) (Math.random() * propTypes.length)];
-//            res.add(PropFactory.createProp(selectedType, this.getLocationX(), this.getLocationY(), 0, 5));
-//        }
-//        return res;
-//    }
     @Override
     public List<AbstractProp> dropProps() {
         List<AbstractProp> res = new LinkedList<>();

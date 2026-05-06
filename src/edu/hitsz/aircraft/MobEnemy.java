@@ -18,7 +18,7 @@ public class MobEnemy extends AbstractEnemy {
         super(locationX, locationY, speedX, speedY, hp);
 
         // ==========================================
-        // 【策略模式修改】：普通敌机不发子弹，所以不需要配 power 等参数
+        // 【策略模式】：普通敌机不发子弹，不需要配 power 等参数
         // 直接为其装备“不发射策略”即可
         // ==========================================
         this.shootStrategy = new NoneShootStrategy();
@@ -47,10 +47,9 @@ public class MobEnemy extends AbstractEnemy {
     @Override
     public void onIceActive() {
         System.out.println("普通敌机被永久冰冻！");
-        // 永久静止[cite: 2]，直接把速度设为0，不需要开线程恢复
+        // 永久静止，直接把速度设为0，不需要开线程恢复
         this.setSpeedY(0);
         this.setSpeedX(0);
     }
     // onBombActive 不用写，继承父类的“直接坠毁”即可
-
 }
