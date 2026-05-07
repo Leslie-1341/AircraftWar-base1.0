@@ -17,14 +17,16 @@ abstract class AbstractGame {
     # bossThreshold: int
     # bossHp: int
     # timeCount: int
+    # backgroundImage: BufferedImage
 
     ' 模板方法：定义了游戏主循环的基础骨架，内部调用了钩子方法
-    + action(): void
+    + final action(): void
 
     ' 抽象方法/钩子方法：交由具体难度子类实现
     # {abstract} levelUpLogic(): void
     # {abstract} supportBoss(): boolean
     # {abstract} adjustBossHp(): void
+    # {abstract} createEnemyFactory(): EnemyFactory
 }
 
 ' =====================================
@@ -36,6 +38,7 @@ together {
         # levelUpLogic(): void
         # supportBoss(): boolean
         # adjustBossHp(): void
+        # createEnemyFactory(): EnemyFactory
     }
 
     class MediumGame {
@@ -43,6 +46,7 @@ together {
         # levelUpLogic(): void
         # supportBoss(): boolean
         # adjustBossHp(): void
+        # createEnemyFactory(): EnemyFactory
     }
 
     class HardGame {
@@ -50,7 +54,15 @@ together {
         # levelUpLogic(): void
         # supportBoss(): boolean
         # adjustBossHp(): void
+        # createEnemyFactory(): EnemyFactory
     }
+}
+
+' =====================================
+' 3. 补充依赖的接口 (彰显设计模式的结合)
+' =====================================
+interface EnemyFactory <<interface>> {
+    + createEnemy(): AbstractEnemy
 }
 
 ' 优化布局
@@ -58,10 +70,16 @@ EasyGame -[hidden]right- MediumGame
 MediumGame -[hidden]right- HardGame
 
 ' =====================================
-' 继承关系
+' 关系连线
 ' =====================================
+' 继承关系
 EasyGame -up-|> AbstractGame
 MediumGame -up-|> AbstractGame
 HardGame -up-|> AbstractGame
+
+' 依赖关系（难度类创建并返回具体的敌机工厂）
+EasyGame ..> EnemyFactory : creates
+MediumGame ..> EnemyFactory : creates
+HardGame ..> EnemyFactory : creates
 
 @enduml

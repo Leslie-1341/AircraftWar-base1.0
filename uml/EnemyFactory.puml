@@ -13,7 +13,8 @@ skinparam classAttributeIconSize 0
 ' ===================
 class AbstractGame {
     # enemyAircrafts: List<AbstractEnemy>
-    + action(): void
+    + final action(): void
+    # {abstract} createEnemyFactory(): EnemyFactory
 }
 
 ' =====================================
@@ -55,6 +56,8 @@ together {
         + createEnemy(): AbstractEnemy
     }
     class BossFactory {
+        - hp: int
+        + BossFactory(hp: int)
         + createEnemy(): AbstractEnemy
     }
 }

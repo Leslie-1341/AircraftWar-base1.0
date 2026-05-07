@@ -7,10 +7,10 @@ import edu.hitsz.application.Main;
 
 public class BossFactory implements EnemyFactory {
 
-    // 【新增】保存动态血量
+    // 保存动态血量
     private int hp;
 
-    // 【新增】带参数的构造函数
+    // 带参数的构造函数
     public BossFactory(int hp) {
         this.hp = hp;
     }

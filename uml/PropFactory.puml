@@ -1,9 +1,9 @@
 @startuml
-'https://plantuml.com/class-diagram
 title 道具简单工厂模式结构图 (Simple Factory Pattern)
 
-skinparam nodesep 50
+skinparam nodesep 40
 skinparam ranksep 70
+skinparam classAttributeIconSize 0
 
 ' ==========================================
 ' 工厂角色 (Factory) - 置于顶层
@@ -16,37 +16,53 @@ class PropFactory <<Simple Factory>> {
 ' 抽象产品角色 (Abstract Product) - 置于中间层
 ' ==========================================
 abstract class AbstractProp {
-    + AbstractProp(int locationX, int locationY, int speedX, int speedY)
+    ' 同步观察者模式重构后的属性和方法，保持全局类图一致性
+    # observers: List<PropObserver>
+    
+    ' 规范 UML 参数表示法 (名称: 类型)
+    + AbstractProp(locationX: int, locationY: int, speedX: int, speedY: int)
     + forward(): void
     + {abstract} active(heroAircraft: HeroAircraft): void
+    + addObserver(observer: PropObserver): void
+    + removeObserver(observer: PropObserver): void
 }
 
 ' 工厂依赖抽象产品作为返回值
-PropFactory ..> AbstractProp : returns >
+PropFactory ..> AbstractProp : returns
 
 ' ==========================================
 ' 具体产品角色 (Concrete Products) - 置于底层
 ' ==========================================
-class BulletSupply {
-    + BulletSupply(int locationX, int locationY, int speedX, int speedY)
-    + active(heroAircraft: HeroAircraft): void
+together {
+    class BulletSupply {
+        + BulletSupply(locationX: int, locationY: int, speedX: int, speedY: int)
+        + active(heroAircraft: HeroAircraft): void
+    }
+    class BulletPlusSupply {
+        + BulletPlusSupply(locationX: int, locationY: int, speedX: int, speedY: int)
+        + active(heroAircraft: HeroAircraft): void
+    }
+    class BombSupply {
+        + BombSupply(locationX: int, locationY: int, speedX: int, speedY: int)
+        + notifyObservers(): void
+        + active(heroAircraft: HeroAircraft): void
+    }
+    class FreezeSupply {
+        + FreezeSupply(locationX: int, locationY: int, speedX: int, speedY: int)
+        + notifyObservers(): void
+        + active(heroAircraft: HeroAircraft): void
+    }
+    class BloodSupply {
+        + BloodSupply(locationX: int, locationY: int, speedX: int, speedY: int)
+        + active(heroAircraft: HeroAircraft): void
+    }
 }
-class BulletPlusSupply {
-    + BulletPlusSupply(int locationX, int locationY, int speedX, int speedY)
-    + active(heroAircraft: HeroAircraft): void
-}
-class BombSupply {
-    + BombSupply(int locationX, int locationY, int speedX, int speedY)
-    + active(heroAircraft: HeroAircraft): void
-}
-class FreezeSupply {
-    + FreezeSupply(int locationX, int locationY, int speedX, int speedY)
-    + active(heroAircraft: HeroAircraft): void
-}
-class BloodSupply {
-    + BloodSupply(int locationX, int locationY, int speedX, int speedY)
-    + active(heroAircraft: HeroAircraft): void
-}
+
+' 使用隐形线强制产品类从左到右水平对齐排列，让排版更工整
+BulletSupply -[hidden]right- BulletPlusSupply
+BulletPlusSupply -[hidden]right- BombSupply
+BombSupply -[hidden]right- FreezeSupply
+FreezeSupply -[hidden]right- BloodSupply
 
 ' ========================================
 ' 建立继承关系 (具体产品在下，抽象产品在上)
@@ -60,7 +76,6 @@ BloodSupply -up-|> AbstractProp
 ' ========================================
 ' 建立生产依赖关系 (工厂创建具体产品)
 ' ========================================
-
 PropFactory ..> BulletSupply : creates
 PropFactory ..> BulletPlusSupply : creates
 PropFactory ..> BombSupply : creates

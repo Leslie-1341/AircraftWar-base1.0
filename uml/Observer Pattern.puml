@@ -16,8 +16,10 @@ interface PropObserver <<interface>> {
 ' 2. 观察者实现层
 ' =============
 abstract class AbstractEnemy {
-    ' 父类实现统一的炸弹响应逻辑
+    + {abstract} getScore(): int
+    + {abstract} dropProps(): List<AbstractProp>
     + onBombActive(): void
+    # freezeWithRecovery(sleepTimeMs: int): void
 }
 AbstractEnemy .up.|> PropObserver
 
@@ -55,36 +57,36 @@ EnemyBullet .up.|> PropObserver
 ' =============
 ' 3. 抽象观察目标
 ' =============
-abstract class PropSubject {
+abstract class AbstractProp {
     # observers: List<PropObserver>
     + addObserver(observer: PropObserver): void
     + removeObserver(observer: PropObserver): void
-    + {abstract} notifyObservers(): void
+    + {abstract} active(heroAircraft: HeroAircraft): void
 }
 
 ' =============
 ' 4. 具体观察目标 
 ' =============
 class BombSupply {
-    - observers: List<PropObserver>
     + BombSupply(locationX: int, locationY: int, speedX: int, speedY: int)
-    + addObserver(observer: PropObserver): void
     + notifyObservers(): void
     + active(heroAircraft: HeroAircraft): void
 }
 
 class FreezeSupply {
-    - observers: List<PropObserver>
     + FreezeSupply(locationX: int, locationY: int, speedX: int, speedY: int)
-    + addObserver(observer: PropObserver): void
     + notifyObservers(): void
     + active(heroAircraft: HeroAircraft): void
 }
 
+BombSupply -up-|> AbstractProp
+FreezeSupply -up-|> AbstractProp
+
 ' ==========
-' 5. 依赖关系
+' 5. 依赖与聚合关系
 ' ==========
-PropSubject o-right-> PropObserver 
-BombSupply o--> PropObserver 
-FreezeSupply o--> PropObserver 
+AbstractProp o-right-> PropObserver : " 通知"
+
+' 注：PropSubject 类由于 Java 单继承限制，在当前架构中作为闲置或辅助类存在，
+' 实际的订阅-分发机制由 AbstractProp 及其子类接管，故 UML 核心链路以 AbstractProp 为准。
 @enduml
